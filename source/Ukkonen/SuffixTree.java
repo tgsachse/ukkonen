@@ -37,7 +37,8 @@ public class SuffixTree {
     }
 
     public static void main(String[] args) {
-        SuffixTree tree = new SuffixTree("abc");
+        System.out.println("yo");
+        //SuffixTree tree = new SuffixTree("abc");
     }
 }
 
