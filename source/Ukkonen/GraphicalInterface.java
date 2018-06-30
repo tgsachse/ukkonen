@@ -42,16 +42,9 @@ public class GraphicalInterface extends Application {
             public void handle(ActionEvent e) {
                 string = stringField.getText();
                 GraphicsContext context = centerCanvas.getGraphicsContext2D();
-                context.setFill(Color.GREEN);
-                context.setStroke(Color.GREEN);
-                context.setLineWidth(5);
-                context.fillOval(minWidth / 2, 0, 30, 30);
-                context.fillOval(minWidth / 2 + 100, 100, 30, 30);
-                context.fillOval(minWidth / 2 - 100, 100, 30, 30);
-                context.strokeLine(minWidth / 2, 0, minWidth / 2 + 100, 100);
-                context.rotate(40);
-                context.fillText(string, 300, 100);
-                context.restore();
+                QuickTree tree = new QuickTree(50, 100, Color.GREEN);
+                tree.drawTree(context, minWidth, tree.diameter);
+                //tree.drawTree(tree.root, context, minWidth/2, 15, minWidth, minHeight-200, 0);
             }
         
         });
