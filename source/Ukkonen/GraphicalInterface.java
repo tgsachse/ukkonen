@@ -8,9 +8,17 @@ import javafx.scene.layout.*;
 import javafx.scene.text.*;
 import javafx.geometry.*;
 import javafx.scene.control.*;
+import javafx.stage.FileChooser.*;
+import javafx.embed.swing.SwingFXUtils;
+import javax.imageio.ImageIO;
+import javafx.scene.image.WritableImage;
+import java.awt.image.RenderedImage;
+import java.io.IOException;
+import java.io.File;
 
 public class GraphicalInterface extends Application {
     private String string;
+    private Stage stage;
     private String title = "Suffix Tree Generator";
     private int minHeight = 800;
     private int minWidth = 1000;
@@ -59,6 +67,29 @@ public class GraphicalInterface extends Application {
         });
         
         Button exportButton = new Button("export");
+        exportButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                FileChooser fileChooser = new FileChooser();
+                ExtensionFilter extensions = new ExtensionFilter("png files (*.png)", "*.png");
+                fileChooser.getExtensionFilters().add(extensions);
+
+                File file = fileChooser.showSaveDialog(stage);
+
+                if (file != null) {
+                    try {
+                        WritableImage image = new WritableImage(minWidth, minHeight - 200);
+                        centerCanvas.snapshot(null, image);
+                        RenderedImage render = SwingFXUtils.fromFXImage(image, null);
+                        ImageIO.write(render, "png", file);
+                    }
+                    catch (IOException exception) {
+                        System.out.println(exception);
+                    }
+                }
+
+            }
+        });
 
         topBox.getChildren().addAll(submitButton, stringField);
         bottomBox.getChildren().addAll(exportButton, quitButton);
@@ -73,6 +104,7 @@ public class GraphicalInterface extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
+        this.stage = stage;
         stage.setTitle(title);
         
         stage.setMinHeight(minHeight);
