@@ -1,3 +1,8 @@
+// Part of Suffix Tree Visualizer by Tiger Sachse
+// Only temporary.
+
+package SuffixTreeVisualizer;
+
 import javafx.scene.canvas.*;
 import javafx.scene.paint.*;
 import javafx.scene.text.*;

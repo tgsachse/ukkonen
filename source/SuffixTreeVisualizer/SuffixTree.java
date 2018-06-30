@@ -1,4 +1,6 @@
-//TGS
+// Part of Suffix Tree Visualizer by Tiger Sachse
+
+package SuffixTreeVisualizer;
 
 public class SuffixTree {
     public String string;
@@ -34,11 +36,6 @@ public class SuffixTree {
                 }
             }
         }
-    }
-
-    public static void main(String[] args) {
-        System.out.println("yo");
-        //SuffixTree tree = new SuffixTree("abc");
     }
 }
 

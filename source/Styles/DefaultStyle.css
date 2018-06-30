@@ -1,0 +1,11 @@
+.topHBox {
+    -fx-spacing: 12;
+    -fx-padding: 30;
+    -fx-alignment: center;
+}
+
+.botHBox {
+    -fx-spacing: 20;
+    -fx-padding: 40;
+    -fx-alignment: center-right;
+}
