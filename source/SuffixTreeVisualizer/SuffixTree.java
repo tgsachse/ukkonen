@@ -2,23 +2,18 @@
 
 //package SuffixTreeVisualizer;
 
+// Provides a suffix tree that can be built and printed in JavaFX.
 public class SuffixTree {
-    public String string;
     private Node root;
+    private String string;
 
+    // Constructor that also builds the tree.
     public SuffixTree(String string) {
         this.string = string;
         buildTree();
     }
 
-    private void _buildTree() {
-        root = new Node();
-        root.children[0] = new Node(0, 1, 1);
-        root.children[10] = new Node(1, 20, 20);
-        root.children[12] = new Node(2, 30, 31);
-        root.children[10].children[2] = new Node(3, 100, 100);
-    }
-
+    // Build the suffix tree using Ukkonen's algorithm.
     private void buildTree() {
         root = new Node();
        
@@ -29,14 +24,19 @@ public class SuffixTree {
         int remaining = 0;
 
 
+        System.out.println("strIndex index path length remaining");
         for (int stringIndex = 0; stringIndex < string.length(); stringIndex++) {
             remaining++;
            
-            System.out.println(string.charAt(stringIndex));
-            
+            //System.out.println(string.charAt(stringIndex));
+
             Node previous = null;
             
             while (remaining > 0) {
+                System.out.printf("%d %s, %d, %d, %d\n", stringIndex, current.toString(), path, length, remaining);
+                if (current != root) {
+                    System.out.printf("this node is %d %d %d\n", current.index, current.edgeStart, current.edgeStop);
+                }
                 int childIndex = string.charAt(stringIndex) - 'a';
 
                 // Check if insertion is at current node and not down an edge.
@@ -46,7 +46,6 @@ public class SuffixTree {
                     if (current.children[childIndex] == null) {
                         current.children[childIndex] = new Node(stringIndex, stringIndex, -1);
                         remaining--;
-                        previous = current;//???? maybe garbage
                     }
                     // Else adjust the current parameters and break the loop.
                     else {
@@ -63,6 +62,14 @@ public class SuffixTree {
                     // Adjust the current parameters and break the loop.
                     if (compareChar == string.charAt(stringIndex)) {
                         length++;
+                        int start = (edgeNode.edgeStart != -1) ? edgeNode.edgeStart : 0;
+                        int stop = (edgeNode.edgeStop != -1) ? edgeNode.edgeStop : stringIndex;
+                        int diff = stop - start;
+                        if (length >= diff) {
+                            path = -1;
+                            length = 0;
+                            current = edgeNode;
+                        }
                         break;
                     }
                     else {
@@ -74,33 +81,42 @@ public class SuffixTree {
                                                                    -1);
                         edgeNode.children[childIndex] = new Node(stringIndex, stringIndex, -1);
                        
-                        //segfaulting
-                        if (edgeNode != root && edgeNode.suffixLink != null) {
-                            current = edgeNode.suffixLink;
-                        }
-                        else {
-                            current = root;
-                        }
-
                         if (previous != null) {
+                            System.out.printf("prev:%s link:%s\n", previous.toString(), edgeNode.toString());
                             previous.suffixLink = edgeNode;
+                            System.out.println("setting link");
+                            previous = edgeNode;
                         }
                         else {
                             previous = edgeNode;
                         }
-
+                        
                         edgeNode.index = -1;
                         
-                        path = string.charAt(stringIndex - length + 1) - 'a';
+                        if (current != root) {
+                            //System.out.printf("current%s link\n", current.toString());
+                            if (current.suffixLink != null) {
+                                current = current.suffixLink;
+                                //System.out.println("following link");
+                            }
+                            else {
+                                current = root;
+                                //System.out.println("no link");
+                            }
+                        }
+                        else {
+                            path = string.charAt(stringIndex - length + 1) - 'a';
+                            length--;
+                        }
                         
                         remaining--;
-                        length--;
                     }
                 }
             }
         }
     }
 
+    // Temporary ***************************************************
     public static void main(String[] args) {
         SuffixTree tree = new SuffixTree("abcabxabcd");
         //SuffixTree tree = new SuffixTree("xyz");
@@ -108,10 +124,21 @@ public class SuffixTree {
         tree.print();
     }
 
-
+    // Temporary
+    private void _buildTree() {
+        root = new Node();
+        root.children[0] = new Node(0, 1, 1);
+        root.children[10] = new Node(1, 20, 20);
+        root.children[12] = new Node(2, 30, 31);
+        root.children[10].children[2] = new Node(3, 100, 100);
+    }
+    
+    // probably temporary
     public void print() {
         print(root, 0);
     }
+
+    // temp
     private void print(Node node, int level) {
         if (node == null) {
             return;
@@ -137,29 +164,35 @@ public class SuffixTree {
         for (int i = 0; i < 26; i++) {
             print(node.children[i], level+1);
         }
-    }
+    }//*************************************************************
 }
 
+// Provides nodes for the suffix tree. These nodes also contain information
+// for the edges between the nodes. Storing the edge information with the nodes
+// cuts down on the complexity and number of objects required in this implementation.
 class Node {
-    public int edgeStart;
-    public int edgeStop;
     public int index;
+    public int edgeStop;
+    public int edgeStart;
     public Node[] children;
     public Node suffixLink;
 
+    // Construct a root node.
     public Node() {
-        edgeStart = -1;
-        edgeStop = -1;
         index = -1;
-        children = new Node[26];//magic
+        edgeStop = -1;
+        edgeStart = -1;
         suffixLink = null;
+        children = new Node[26];//magic
     }
 
+    // Construct a node with a provided index, as well as indices for the substring
+    // contained on the edge leading into the node.
     public Node(int index, int edgeStart, int edgeStop) {
-        this.edgeStart = edgeStart;
-        this.edgeStop = edgeStop;
+        suffixLink = null;
         this.index = index;
         children = new Node[26];//magic
-        suffixLink = null;
+        this.edgeStop = edgeStop;
+        this.edgeStart = edgeStart;
     }
 }
