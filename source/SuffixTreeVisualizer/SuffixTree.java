@@ -1,15 +1,27 @@
 // Part of Suffix Tree Visualizer by Tiger Sachse
 
-//package SuffixTreeVisualizer;
+package SuffixTreeVisualizer;
+
+import javafx.scene.canvas.*;
+import javafx.scene.paint.*;
+import javafx.scene.text.*;
 
 // Provides a suffix tree that can be built and printed in JavaFX.
 public class SuffixTree {
     private Node root;
     private String string;
+    public int diameter;
+    private int ovalThickness;
+    private int fontSize;
+    private int defaultLength;
+    private Color color;
 
     // Constructor that also builds the tree.
-    public SuffixTree(String string) {
+    public SuffixTree(String string, int diameter, int defaultLength, Color color) {
         this.string = string;
+        this.diameter = diameter;
+        this.defaultLength = defaultLength;
+        this.color = color;
         buildTree();
     }
 
@@ -116,13 +128,84 @@ public class SuffixTree {
         }
     }
 
+    public void drawTree(GraphicsContext context, int width, int depth) {
+        drawTree(context, root, width, depth, 0);
+    }
+
+    private void drawTree(GraphicsContext context,
+                          Node node,
+                          int width,
+                          int depth,
+                          int inset) {
+
+        int centerX = inset + (width / 2);
+        int centerY = depth;
+        int ovalX = centerX - (diameter / 2);
+        int ovalY = centerY - (diameter / 2);
+        int length = defaultLength;
+        int innerDiameter = diameter - ovalThickness;
+        int innerOvalX = ovalX + (ovalThickness / 2);
+        int innerOvalY = ovalY + (ovalThickness / 2);
+
+        int children = 0;
+        for (int i = 0; i < 26; i++) {//magic fix later
+            if (node.children[i] != null) {
+                children++;
+            }
+            if (node.length > length) {
+                length = node.length;
+            }
+        }
+
+        int widthSegment = width / ((children > 0) ? children : 1);
+        int lineTargets[] = new int[children];
+        for (int i = 0; i < children; i++) {
+            lineTargets[i] = inset + (widthSegment / 2) + (i * widthSegment);
+        }
+
+        context.setFill(color);
+        context.setStroke(color);
+
+        for (int i = 0; i < children; i++) {
+            context.strokeLine(centerX, centerY, lineTargets[i], centerY + length); 
+        }
+
+        // Draw two ovals, the outer oval being the color of the tree, and the
+        // inner oval being white.
+        context.fillOval(ovalX, ovalY, diameter, diameter);
+        context.setFill(Color.WHITE);
+        context.fillOval(innerOvalX, innerOvalY, innerDiameter, innerDiameter);
+        context.setFill(color);
+        
+        context.setTextAlign(TextAlignment.CENTER);
+        context.setFont(new Font(fontSize));
+        context.fillText(Integer.toString(node.index), centerX, centerY);
+
+        // All done. :)
+        if (children < 1) {
+            return;
+        }
+
+        for (int i = 0, j = 0; i < 26; i++) {//magic
+            if (node.children[i] != null) {
+                drawTree(context,
+                         node.children[i],
+                         widthSegment,
+                         depth + length,
+                         inset + widthSegment * j);
+                j++;
+            }
+        }
+    }
+
     // Temporary ***************************************************
+    /*
     public static void main(String[] args) {
         SuffixTree tree = new SuffixTree("abcabxabcd");
         //SuffixTree tree = new SuffixTree("xyz");
         //SuffixTree tree = new SuffixTree("ababab");
         tree.print();
-    }
+    }*/
 
     // Temporary
     private void _buildTree() {
@@ -172,6 +255,7 @@ public class SuffixTree {
 // cuts down on the complexity and number of objects required in this implementation.
 class Node {
     public int index;
+    public int length;
     public int edgeStop;
     public int edgeStart;
     public Node[] children;
@@ -179,6 +263,7 @@ class Node {
 
     // Construct a root node.
     public Node() {
+        length = 1;
         index = -1;
         edgeStop = -1;
         edgeStart = -1;
@@ -189,6 +274,7 @@ class Node {
     // Construct a node with a provided index, as well as indices for the substring
     // contained on the edge leading into the node.
     public Node(int index, int edgeStart, int edgeStop) {
+        length = 1;
         suffixLink = null;
         this.index = index;
         children = new Node[26];//magic

@@ -11,7 +11,7 @@ fi
 # Compile the source code, throw it all in a jar, and clean up.
 cd source
 javac SuffixTreeVisualizer/*.java
-jar cvfm ../dist/$NAME.jar SuffixTreeVisualizer/manifest.txt SuffixTreeVisualizer/* Styles/*
+jar cvfm ../dist/$NAME.jar SuffixTreeVisualizer/Manifest.txt SuffixTreeVisualizer/* Styles/*
 rm SuffixTreeVisualizer/*.class
 cd ..
 

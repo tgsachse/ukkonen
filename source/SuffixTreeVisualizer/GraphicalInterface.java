@@ -99,7 +99,7 @@ public class GraphicalInterface extends Application {
                 // All of this stuff will change once the real tree is done.
                 string = field.getText();
                 GraphicsContext context = canvas.getGraphicsContext2D();
-                QuickTree tree = new QuickTree(50, 100, Color.GREEN);
+                SuffixTree tree = new SuffixTree(string, 50, 100, Color.GREEN);
                 tree.drawTree(context, minWidth, tree.diameter);
             }
         });
