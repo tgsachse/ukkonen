@@ -17,7 +17,7 @@ public class SuffixTree {
     private int minimumLength;
 
     private final int CHILDREN = 26;
-    private final boolean DEBUG = false;
+    private final boolean DEBUG = true;
 
     // Constructor that builds the tree with some sensible defaults.
     public SuffixTree(String string) {
@@ -30,6 +30,10 @@ public class SuffixTree {
         this.string = string;
         
         build();
+        
+        if (DEBUG) {
+            printDebuggingInformation();
+        }
     }
 
     // Constructor builds the tree with custom visual parameters.
@@ -48,6 +52,10 @@ public class SuffixTree {
         this.ovalThickness = ovalThickness;
 
         build();
+
+        if (DEBUG) {
+            printDebuggingInformation();
+        }
     }
 
     // Build the suffix tree using Ukkonen's algorithm.
@@ -151,6 +159,8 @@ public class SuffixTree {
                 }
             }
         }
+
+        correctTerminalSentinels(root);
     }
 
     // Wrapper to draw the tree onto a context. This calls the recursive draw function
@@ -220,9 +230,7 @@ public class SuffixTree {
         context.setTextAlign(TextAlignment.CENTER);
         context.setFont(new Font(fontSize));
         //context.fillText(Integer.toString(node.terminus), centerX, centerY);
-        int start = (node.getStart() == -1) ? 0 : node.getStart();
-        int stop = (node.getStop() == -1) ? string.length() : node.getStop();
-        context.fillText(string.substring(start, stop), centerX, centerY);
+        context.fillText(string.substring(node.getStart(), node.getStop()), centerX, centerY);
         //*********************************************
 
         // Recursively call this function on all the children.
@@ -235,39 +243,61 @@ public class SuffixTree {
         }
     }
 
-    // Temporary ***************************************************
-    // probably temporary
-    public void print() {
-        print(root, 0);
-    }
-
-    // temp
-    private void print(Node node, int level) {
+    private void correctTerminalSentinels(Node node) {
         if (node == null) {
             return;
         }
-        int stringStart = (node.getStart() == -1) ? 0 : node.getStart();
-        int stringStop = (node.getStop() == -1) ? string.length() : node.getStop();
 
-        String suffix = string.substring(stringStart, stringStop);
-        System.out.printf("level %d: ", level);
-        if (node.getLink() != null) {
-            System.out.printf("linkFound to node %d (%d %d) %s |||",
-                              node.getLink().getTerminus(),
-                              node.getLink().getStart(),
-                              node.getLink().getStop(),
-                              string.substring(node.getLink().getStart(),
-                                               node.getLink().getStop()));
+        if (node.getStop() < 0) {
+            node.setStop(string.length());
         }
-        System.out.printf("node %d (%d %d) %s\n",
+
+        for (int childIndex = 0; childIndex < CHILDREN; childIndex++) {
+            correctTerminalSentinels(node.getChild(childIndex));
+        }
+    }
+
+    // Public wrapper to call the recursive debugging information function,
+    // starting at the root with an initial level of zero.
+    public void printDebuggingInformation() {
+        System.out.println("TERMINUS (START, STOP) SUFFIX");
+        printDebuggingInformation(root, 0);
+    }
+
+    // Recursively print the tree to the terminal with debugging information.
+    private void printDebuggingInformation(Node node, int level) {
+        // Base case for the recursive function.
+        if (node == null) {
+            return;
+        }
+        
+        // Print some fancy bars to indicate depth of the node.
+        for (int braceCount = 0; braceCount < level; braceCount++) {
+            System.out.printf("| ");
+        }
+   
+        // Print the fundamental properties of this node.
+        String suffix = string.substring(node.getStart(), node.getStop());
+        System.out.printf("%d (%d %d) %s",
                           node.getTerminus(),
                           node.getStart(),
                           node.getStop(),
                           suffix);
-        for (int i = 0; i < 26; i++) {
-            print(node.getChild(i), level+1);
+
+        // Print a message if a suffix link exists.
+        Node link = node.getLink();
+        if (link != null) {
+            System.out.printf(" | %s -> %s\n", node.toString(), link.toString());
         }
-    }//*************************************************************
+        else {
+            System.out.printf("\n");
+        }
+        
+        // Recursively call this function for all children of the node.
+        for (int childIndex = 0; childIndex < CHILDREN; childIndex++) {
+            printDebuggingInformation(node.getChild(childIndex), level + 1);
+        }
+    }
 }
 
 // Provides nodes for the suffix tree. This node also contains edge information.
