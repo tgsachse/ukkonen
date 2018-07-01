@@ -11,10 +11,12 @@ import javafx.stage.FileChooser.*;
 import javafx.scene.*;
 import javafx.scene.text.*;
 import javafx.scene.image.*;
+import javafx.scene.input.*;
 import javafx.scene.paint.*;
 import javafx.scene.canvas.*;
 import javafx.scene.layout.*;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.*;
 import javax.imageio.*;
 import javafx.geometry.*;
 import javafx.embed.swing.*;
@@ -25,12 +27,13 @@ public class GraphicalInterface extends Application {
     private Stage stage;
     private Scene scene;
     private String string;
-    private int minHeight = 800;
-    private int minWidth = 1000;
-    private int canvasWidth = minWidth;
-    private int canvasHeight = minHeight - 200;
-    private String title = "Suffix Tree Visualizer";
-    private String stylesheet = "Styles/DefaultStyle.css";
+    final private int MAX_LENGTH = 20;
+    final private int MIN_HEIGHT = 800;
+    final private int MIN_WIDTH = 1000;
+    final private int CANVAS_WIDTH = MIN_WIDTH;
+    final private int CANVAS_HEIGHT = MIN_HEIGHT - 200;
+    final private String TITLE = "Suffix Tree Visualizer";
+    final private String STYLESHEET = "Styles/DefaultStyle.css";
    
     // Entry point to the program.
     public static void main(String[] args) {
@@ -45,20 +48,21 @@ public class GraphicalInterface extends Application {
         createScene();
        
         // Configure and show the stage.
-        stage.setTitle(title);
-        stage.setMinHeight(minHeight);
-        stage.setMinWidth(minWidth);
+        stage.setTitle(TITLE);
+        stage.setMinHeight(MIN_HEIGHT);
+        stage.setMinWidth(MIN_WIDTH);
         stage.setScene(scene);
         stage.show();
     }
-    
+   
+    // Create the main scene of the program.
     private void createScene() {
         // Create canvas for center of scene.
-        Canvas centerCanvas = new Canvas(canvasWidth, canvasHeight);
+        Canvas centerCanvas = new Canvas(CANVAS_WIDTH, CANVAS_HEIGHT);
         
         // Create horizontal row with text field and button for top of scene.
         HBox topBox = new HBox();
-        TextField stringField = new TextField();
+        TextField stringField = getStringField(centerCanvas);
         Button submitButton = getSubmitButton(stringField, centerCanvas);
         
         // Create horizontal row with two buttons for bottom of scene.
@@ -77,15 +81,30 @@ public class GraphicalInterface extends Application {
         mainPane.setBottom(bottomBox);
         
         // Initialize the scene with the main border pane.
-        scene = new Scene(mainPane, minWidth, minHeight); 
+        scene = new Scene(mainPane, MIN_WIDTH, MIN_HEIGHT); 
         
         // Load the default style sheet and apply it to the horizontal rows.
-        scene.getStylesheets().add(stylesheet); 
+        scene.getStylesheets().add(STYLESHEET); 
         bottomBox.getStyleClass().add("botHBox");
         topBox.getStyleClass().add("topHBox");
-        // Tweak the text field to perfection.
+    }
+
+    // Create a text field that accepts a suffix string.
+    private TextField getStringField(Canvas canvas) {
+        TextField stringField = new TextField();
         stringField.setPromptText("enter a string here");
         stringField.setPrefWidth(380);
+
+        stringField.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent key) {
+                if (key.getCode().equals(KeyCode.ENTER)) {
+                    createTree(canvas, stringField);
+                }
+            }
+        });
+
+        return stringField;
     }
 
     // Create a submit button for the text field.
@@ -96,17 +115,52 @@ public class GraphicalInterface extends Application {
         submitButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
-                // All of this stuff will change once the real tree is done.//
-                string = field.getText();
-                GraphicsContext context = canvas.getGraphicsContext2D();
-                SuffixTree tree = new SuffixTree(string);
-                tree.draw(context, minWidth);
+                createTree(canvas, field);
             }
         });
 
         return submitButton;
     }
-   
+ 
+    // Create and draw a suffix tree to the canvas, based on the string
+    // in the text field.
+    private void createTree(Canvas canvas, TextField field) {
+        GraphicsContext context = canvas.getGraphicsContext2D();
+        
+        string = field.getText();
+        // Hard cap the max length of a string so the trees don't look terrible.
+        if (string.length() > MAX_LENGTH) {
+            StringBuilder error = new StringBuilder();
+            
+            error.append("Your string is too long.");
+            error.append("The maximum length this program can handle is ");
+            error.append(MAX_LENGTH);
+            error.append(".");
+            
+            popError(error.toString());
+        }
+        else {
+            // Clear any previous trees from the screen.
+            context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); 
+            
+            SuffixTree tree = new SuffixTree(string);
+        
+            tree.draw(context, MIN_WIDTH);
+        }
+    }
+
+    // Show a popup error.
+    private void popError(String error) {
+        Alert alert = new Alert(AlertType.ERROR);
+        
+        alert.setTitle("Something happened...");
+        alert.initStyle(StageStyle.UTILITY);
+        alert.setHeaderText(null);
+        alert.setContentText(error);
+
+        alert.showAndWait();
+    }
+
     // Create a quit button.
     private Button getQuitButton() {
         Button quitButton = new Button("quit");
@@ -143,7 +197,7 @@ public class GraphicalInterface extends Application {
                 if (file != null) {
                     try {
                         // Take a snapshot of the canvas and write it to file.
-                        WritableImage image = new WritableImage(canvasWidth, canvasHeight);
+                        WritableImage image = new WritableImage(CANVAS_WIDTH, CANVAS_HEIGHT);
                         canvas.snapshot(null, image);
                         RenderedImage render = SwingFXUtils.fromFXImage(image, null);
                         ImageIO.write(render, "png", file);
