@@ -16,6 +16,7 @@ public class SuffixTree {
     private int ovalThickness;
     private int minimumLength;
 
+    private final int SENTINEL = -1;
     private final int CHILDREN = 26;
     private final boolean DEBUG = true;
 
@@ -58,108 +59,149 @@ public class SuffixTree {
         }
     }
 
-    // Build the suffix tree using Ukkonen's algorithm.
+    // Build the suffix tree using Ukkonen's algorithm. This function is
+    // certainly too long, but it is not easily split into subfunctions because
+    // of the importance of the triple parameters from round to round. I apologize
+    // in advance, but if you really want to know how this algorithm works I suggest
+    // looking up some (much better) articles.
     private void build() {
-        root = new Node();
+        // POTENTIAL BUG: Dunno what happens if string is zero.
+        root = new Node(0, 0, SENTINEL, CHILDREN);
        
-        // Parameters to track location in the tree.
-        int path = -1;
+        // Parameter triple to track location in the tree.
+        int path = SENTINEL;
         int length = 0;
         int remaining = 0;
+
         Node current = root;
 
+        if (DEBUG) {
+            System.out.println("INDEX (NODE, EDGE, LENGTH) REMAINING");
+        }
 
-        System.out.println("strIndex index path length remaining");
+        // Process every character in the string.
         for (int stringIndex = 0; stringIndex < string.length(); stringIndex++) {
+            Node previous = null;
             remaining++;
            
-            //System.out.println(string.charAt(stringIndex));
+            // Get the integer value of the character at the current string index.
+            int childIndex = string.charAt(stringIndex) - 'a';
 
-            Node previous = null;
-            
+            // Perform the algorithm as long as there are suffixes remaining.
             while (remaining > 0) {
-                /*System.out.printf("%d %s, %d, %d, %d\n", stringIndex, current.toString(), path, length, remaining);
-                if (current != root) {
-                    System.out.printf("this node is %d %d %d\n", current.terminus, current.start, current.stop);
-                }*/
-                int childIndex = string.charAt(stringIndex) - 'a';
+                if (DEBUG) {
+                    System.out.printf("%d (%s, %d, %d) %d\n",
+                                      stringIndex,
+                                      current.toString(),
+                                      path,
+                                      length,
+                                      remaining);
+                }
 
                 // Check if insertion is at current node and not down an edge.
-                if (path == -1 || length == 0) {
+                if (path == SENTINEL || length == 0) {
                     // If the current node has no child for the given character,
                     // create that node and decrement remaining.
                     if (current.getChild(childIndex) == null) {
-                        current.setChild(childIndex, new Node(stringIndex, stringIndex, -1));
+                        current.setChild(childIndex, new Node(stringIndex,
+                                                              SENTINEL,
+                                                              stringIndex,
+                                                              CHILDREN));
                         remaining--;
                     }
-                    // Else adjust the current parameters and break the loop.
+                    // Else adjust the parameter triple and break the loop (rule one).
                     else {
                         path = childIndex;
                         length++;
                         break;
+                        // POTENTIAL BUG: if this addition to length pushes into a
+                        // child node then this would probably break the code. Very fixable
+                        // and will be tested soon.
                     }
                 }
                 // Else check down an edge.
                 else {
-                    Node edgeNode = current.getChild(path);
-                    char compareChar = string.charAt(edgeNode.getStart() + length);
+                    // Store the child for easy access.
+                    Node child = current.getChild(path);
                    
-                    // Adjust the current parameters and break the loop.
-                    if (compareChar == string.charAt(stringIndex)) {
+                    // If the current character and the character on the edge
+                    // at the appropriate length match, adjust the current
+                    // parameters and break the loop.
+                    if (string.charAt(child.getStart() + length) == string.charAt(stringIndex)) {
                         length++;
-                        int start = (edgeNode.getStart() != -1) ? edgeNode.getStart() : 0;
-                        int stop = (edgeNode.getStop() != -1) ? edgeNode.getStop() : stringIndex;
-                        int diff = stop - start;
-                        if (length >= diff) {
-                            path = -1;
+                        // Adjust the current node if the length extends past the
+                        // present child's edge.
+                        if (length >= child.getLength(stringIndex)) {
+                            path = SENTINEL;
                             length = 0;
-                            current = edgeNode;
+                            current = child;
                         }
                         break;
                     }
+                    // Else the characters don't match and we need a new node.
                     else {
-                        int compareIndex = compareChar - 'a';
+                        int compareIndex = string.charAt(child.getStart() + length) - 'a';
 
-                        edgeNode.setStop(edgeNode.getStart() + length);
-                        edgeNode.setChild(compareIndex, new Node(edgeNode.getTerminus(),
-                                                                 edgeNode.getStop(),
-                                                                 -1));
-                        edgeNode.setChild(childIndex, new Node(stringIndex, stringIndex, -1));
-                       
+                        // Set the child's new stopping point, then create two new
+                        // nodes. The first is for the rest of the child's old edge, and
+                        // the second is for the mismatching character from the string.
+                        child.setStop(child.getStart() + length);
+                        child.setChild(compareIndex,
+                                       new Node(child.getStop(),
+                                                SENTINEL,
+                                                child.getTerminus(),
+                                                CHILDREN));
+                        child.setChild(childIndex, new Node(stringIndex,
+                                                            SENTINEL,
+                                                            stringIndex,
+                                                            CHILDREN));
+                        
+                        // If this is not the first newly created node, then apply rule two
+                        // from Ukkonen's algorithm.
                         if (previous != null) {
-                            //System.out.printf("prev:%s link:%s\n", previous.toString(), edgeNode.toString());
-                            previous.setLink(edgeNode);
-                            //System.out.println("setting link");
-                            previous = edgeNode;
+                            if (DEBUG) {
+                                System.out.printf("%s -> %s\n",
+                                                  previous.toString(),
+                                                  child.toString());
+                            }
+
+                            // Set the suffix link of the previous new node to point to
+                            // the current new node.
+                            previous.setLink(child);
                         }
-                        else {
-                            previous = edgeNode;
-                        }
-                        
-                        edgeNode.setTerminus(-1);
-                        
+
+                        // This node is now the previous node.
+                        previous = child;
+                       
+                        // This child's terminus doesn't matter anymore, so it's set to
+                        // a sentinel value.
+                        child.setTerminus(SENTINEL);
+                       
+                        // If the current node is not the root, follow a suffix link
+                        // if possible, (rule three).
                         if (current != root) {
-                            //System.out.printf("current%s link\n", current.toString());
                             if (current.getLink() != null) {
                                 current = current.getLink();
-                                //System.out.println("following link");
                             }
                             else {
                                 current = root;
-                                //System.out.println("no link");
                             }
                         }
+                        // Else adjust the path and length values of the parameter triple.
                         else {
                             path = string.charAt(stringIndex - length + 1) - 'a';
                             length--;
                         }
                         
+                        // One down! Several to go...
                         remaining--;
                     }
                 }
             }
         }
 
+        // After the conclusion of that nightmarish algorithm, replace any remaining
+        // sentinels in the nodes.
         correctTerminalSentinels(root);
     }
 
@@ -170,6 +212,7 @@ public class SuffixTree {
         draw(context, root, width, diameter, 0);
     }
 
+    // Recursively draw each node and it's edges.
     private void draw(GraphicsContext context, Node node, int width, int depth, int inset) {
         // What good is a recursive function without a base case?
         if (node == null) {
@@ -243,15 +286,24 @@ public class SuffixTree {
         }
     }
 
+    // During the build process a SENTINEL is used to indicate that the stop
+    // index of an edge (inside a node) is running until the current childIndex of
+    // the build algorithm. Once the algorithm is complete any remaining SENTINELs
+    // must be set to equal the length of the full string, indicating that the stop
+    // index of that edge is the end of the string. This function finds the SENTINELs
+    // and replaces them appropriately.
     private void correctTerminalSentinels(Node node) {
+        // Safety base case.
         if (node == null) {
             return;
         }
-
-        if (node.getStop() < 0) {
+        
+        // If this node contains a sentinel, it doesn't anymore!
+        if (node.getStop() == SENTINEL) {
             node.setStop(string.length());
         }
 
+        // Call this function on all children.
         for (int childIndex = 0; childIndex < CHILDREN; childIndex++) {
             correctTerminalSentinels(node.getChild(childIndex));
         }
@@ -311,30 +363,32 @@ class Node {
     private Node[] children;
     private Node suffixLink;
 
-    // Construct a root node.
-    public Node() {
-        stop = 0;
-        start = 0;
-        length = 0;
-        terminus = -1;
-        suffixLink = null;
-        children = new Node[26];//magic
-    }
-
     // Construct a node with a provided terminus, as well as indices for the substring
     // contained on the edge leading into the node.
-    public Node(int terminus, int start, int stop) {
+    public Node(int start, int stop, int terminus, int children) {
         length = 1;
         this.stop = stop;
         suffixLink = null;
         this.start = start;
         this.terminus = terminus;
-        children = new Node[26];//magic
+        this.children = new Node[children];
     }
 
-    // Getter for length.
+    // Getter for length. Only callable after build process is complete and
+    // sentinels have been removed (e.g. once the constructor is finished).
     public int getLength() {
         return length;
+    }
+
+    // Getter for length. Can be called during the build process with a provided
+    // index.
+    public int getLength(int index) {
+        if (stop > 0) {
+            return length;
+        }
+        else {
+            return index - start;
+        }
     }
 
     // Getter for starting index of substring on incoming edge.
