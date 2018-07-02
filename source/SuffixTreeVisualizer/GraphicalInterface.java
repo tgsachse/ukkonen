@@ -22,6 +22,8 @@ import javafx.geometry.*;
 import javafx.embed.swing.*;
 import javafx.application.*;
 
+import javafx.scene.shape.*;
+
 // A GUI class to display suffix trees.
 public class GraphicalInterface extends Application {
     private Stage stage;
@@ -57,18 +59,18 @@ public class GraphicalInterface extends Application {
    
     // Create the main scene of the program.
     private void createScene() {
-        // Create canvas for center of scene.
-        Canvas centerCanvas = new Canvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+        // Create pane for center of scene.
+        Pane centerPane = new Pane();
         
         // Create horizontal row with text field and button for top of scene.
         HBox topBox = new HBox();
-        TextField stringField = getStringField(centerCanvas);
-        Button submitButton = getSubmitButton(stringField, centerCanvas);
+        TextField stringField = getStringField(centerPane);
+        Button submitButton = getSubmitButton(stringField, centerPane);
         
         // Create horizontal row with two buttons for bottom of scene.
         HBox bottomBox = new HBox();
         Button quitButton = getQuitButton();
-        Button exportButton = getExportButton(centerCanvas);
+        Button exportButton = getExportButton(centerPane);
         
         // Add buttons to their fields.
         topBox.getChildren().addAll(submitButton, stringField);
@@ -77,7 +79,7 @@ public class GraphicalInterface extends Application {
         // Create the border pane that contains everything, then add everything.
         BorderPane mainPane = new BorderPane();
         mainPane.setTop(topBox);
-        mainPane.setCenter(centerCanvas);
+        mainPane.setCenter(centerPane);
         mainPane.setBottom(bottomBox);
         
         // Initialize the scene with the main border pane.
@@ -90,7 +92,7 @@ public class GraphicalInterface extends Application {
     }
 
     // Create a text field that accepts a suffix string.
-    private TextField getStringField(Canvas canvas) {
+    private TextField getStringField(Pane pane) {
         TextField stringField = new TextField();
         stringField.setPromptText("enter a string here");
         stringField.setPrefWidth(380);
@@ -99,7 +101,7 @@ public class GraphicalInterface extends Application {
             @Override
             public void handle(KeyEvent key) {
                 if (key.getCode().equals(KeyCode.ENTER)) {
-                    createTree(canvas, stringField);
+                    createTree(pane, stringField);
                 }
             }
         });
@@ -108,24 +110,24 @@ public class GraphicalInterface extends Application {
     }
 
     // Create a submit button for the text field.
-    private Button getSubmitButton(TextField field, Canvas canvas) {
+    private Button getSubmitButton(TextField field, Pane pane) {
         Button submitButton = new Button("submit");
         
         // Set the action of the button using this gorgeous syntax.
         submitButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
-                createTree(canvas, field);
+                createTree(pane, field);
             }
         });
 
         return submitButton;
     }
  
-    // Create and draw a suffix tree to the canvas, based on the string
+    // Create and draw a suffix tree to the pane, based on the string
     // in the text field.
-    private void createTree(Canvas canvas, TextField field) {
-        GraphicsContext context = canvas.getGraphicsContext2D();
+    private void createTree(Pane pane, TextField field) {
+        //GraphicsContext context = pane.getGraphicsContext2D();
         
         string = field.getText();
         // Hard cap the max length of a string so the trees don't look terrible.
@@ -141,11 +143,13 @@ public class GraphicalInterface extends Application {
         }
         else {
             // Clear any previous trees from the screen.
-            context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); 
-            
+            //context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); 
+            pane.getChildren().clear();
+
             SuffixTree tree = new SuffixTree(string);
         
-            tree.draw(context, MIN_WIDTH);
+            //pane.getChildren().add(new Circle(MIN_WIDTH/2, 600, 50));
+            tree.draw(pane, MIN_WIDTH);
         }
     }
 
@@ -177,8 +181,8 @@ public class GraphicalInterface extends Application {
         return quitButton;
     }
    
-    // Create an export button to save the canvas to a file.
-    private Button getExportButton(Canvas canvas) {
+    // Create an export button to save the pane to a file.
+    private Button getExportButton(Pane pane) {
         Button exportButton = new Button("export");
 
         // Set the action of the button. This portion of my code is largely
@@ -196,15 +200,15 @@ public class GraphicalInterface extends Application {
 
                 if (file != null) {
                     try {
-                        // Take a snapshot of the canvas and write it to file.
+                        // Take a snapshot of the pane and write it to file.
                         WritableImage image = new WritableImage(CANVAS_WIDTH, CANVAS_HEIGHT);
-                        canvas.snapshot(null, image);
+                        pane.snapshot(null, image);
                         RenderedImage render = SwingFXUtils.fromFXImage(image, null);
                         ImageIO.write(render, "png", file);
                     }
                     // Print the error if something goes wrong with file I/O.
                     catch (IOException exception) {
-                        System.out.println(exception);
+                        exception.printStackTrace();
                     }
                 }
             }
