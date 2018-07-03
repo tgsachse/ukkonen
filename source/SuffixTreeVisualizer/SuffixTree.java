@@ -170,7 +170,9 @@ public class SuffixTree {
 
         // After the conclusion of that nightmarish algorithm, replace any remaining
         // sentinels in the nodes.
-        correctTerminalSentinels(root);
+        correctSentinels();
+
+        setHeights();
     }
 
     // Wrapper to draw the tree onto a context. This calls the recursive draw function
@@ -193,47 +195,62 @@ public class SuffixTree {
         final int centerX = inset + (width / 2);
 
         int length = pane.getMinimumLength();
-
-
-        // Collect all the children into an array and adjust length appropriately.
-        ArrayList<Node> children = new ArrayList<>();
-        for (int childIndex = 0; childIndex < CHILDREN; childIndex++) {
-            Node child = node.getChild(childIndex);
-            if (child != null) {
-                children.add(child);
-
-                if (child.getLength() > length) {
-                    length = child.getLength();
-                }
-            }
-        }
-
+        Node[] children = node.getChildren();
+        
         // Calculate how many horizontal slices are available based on the number of children.
-        int widthSegment = width / ((children.size() > 0) ? children.size() : 1);
+        int widthSegment = width / ((node.getChildCount() > 0) ? node.getChildCount() : 1);
 
+        Node[] sortedChildren = MiddleSort.sort(children, node.getChildCount());
+        
         // Draw the edges going to each child.
-        int childCount = 0;
-        for (Node child : children) {
-            int targetX = inset + (widthSegment / 2) + (childCount * widthSegment);
+        int childIndex = 0;
+        for (Node child : sortedChildren) {
+            int targetX = inset + (widthSegment / 2) + (childIndex * widthSegment);
             String suffix = child.getSuffix(string);
 
             pane.drawEdge(centerX, centerY, targetX, centerY + length, suffix);
 
-            childCount++;
+            childIndex++;
         }
 
-        // Draw the node.
         pane.drawNode(centerX, centerY, node);
 
         // Recursively call this function on all the children.
-        childCount = 0;
-        for (Node child : children) {
-            int newInset = inset + widthSegment * childCount;
+        childIndex = 0;
+        for (Node child : sortedChildren) {
+            int newInset = inset + widthSegment * childIndex;
 
             draw(pane, child, widthSegment, depth + length, newInset);
 
-            childCount++;
+            childIndex++;
         }
+    }
+
+    private void setHeights() {
+        setHeight(root);
+    }
+
+    private Integer setHeight(Node node) {
+        Integer height = Integer.valueOf(-1);
+        
+        if (node == null) {
+            return height;
+        }
+
+        for (Node child : node.getChildren()) {
+            int childHeight = setHeight(child);
+            if (childHeight > height) {
+                height = childHeight;
+            }
+        }
+
+        node.setHeight(height + 1);
+
+        return height + 1;
+    }
+
+    private void correctSentinels() {
+        correctSentinel(root);
     }
 
     // During the build process a SENTINEL is used to indicate that the stop
@@ -242,7 +259,7 @@ public class SuffixTree {
     // must be set to equal the length of the full string, indicating that the stop
     // index of that edge is the end of the string. This function finds the SENTINELs
     // and replaces them appropriately.
-    private void correctTerminalSentinels(Node node) {
+    private void correctSentinel(Node node) {
         // Safety base case.
         if (node == null) {
             return;
@@ -255,7 +272,7 @@ public class SuffixTree {
 
         // Call this function on all children.
         for (int childIndex = 0; childIndex < CHILDREN; childIndex++) {
-            correctTerminalSentinels(node.getChild(childIndex));
+            correctSentinel(node.getChild(childIndex));
         }
     }
 
@@ -305,23 +322,43 @@ public class SuffixTree {
 // Provides nodes for the suffix tree. This node also contains edge information.
 // Storing the edge information with the nodes cuts down on the complexity and
 // number of objects required in this implementation.
-class Node {
+class Node implements Comparable<Node> {
     private int stop;
     private int start;
     private int length;
     private int terminus;
+    private Integer height;
     private Node[] children;
     private Node suffixLink;
+    private int childCount;
 
     // Construct a node with a provided terminus, as well as indices for the substring
     // contained on the edge leading into the node.
     public Node(int start, int stop, int terminus, int children) {
         length = 1;
+        childCount = 0;
         this.stop = stop;
         suffixLink = null;
         this.start = start;
         this.terminus = terminus;
         this.children = new Node[children];
+    }
+
+    @Override
+    public int compareTo(Node other) {
+        return height.compareTo(other.getHeight());
+    }
+
+    public int getChildCount() {
+        return childCount;
+    }
+
+    public Node[] getChildren() {
+        return children;
+    }
+
+    public Integer getHeight() {
+        return height;
     }
 
     // Getter for length. Only callable after build process is complete and
@@ -370,7 +407,11 @@ class Node {
     public Node getLink() {
         return suffixLink;
     }
-    
+   
+    public void setHeight(Integer height) {
+        this.height = height;
+    }
+
     // Set the ending index and update the length parameter.
     public void setStop(int stop) {
         this.stop = stop;
@@ -384,11 +425,51 @@ class Node {
 
     // Setter for child at index in children array.
     public void setChild(int index, Node child) {
+        if (children[index] == null && child != null) {
+            childCount++;
+        }
+        else if (children[index] != null && child == null) {
+            childCount--;
+        }
         children[index] = child;
     }
 
     // Setter for suffix link.
     public void setLink(Node suffixLink) {
         this.suffixLink = suffixLink;
+    }
+}
+
+class MiddleSort {
+    public static Node[] sort(Node[] array, int items) {
+        Node[] intermediateArray = new Node[items];
+
+        int nodeIndex = 0;
+        for (Node node : array) {
+            if (node != null) {
+                intermediateArray[nodeIndex] = node;
+                nodeIndex++;
+            }
+        }
+
+        Arrays.sort(intermediateArray);
+
+        Node[] sortedArray = new Node[items];
+
+        int frontIndex = 0;
+        int backIndex = items - 1;
+
+        for (int node = 0; node < items; node++) {
+            if (node % 2 == 0) {
+                sortedArray[frontIndex] = intermediateArray[node];
+                frontIndex++;
+            }
+            else {
+                sortedArray[backIndex] = intermediateArray[node];
+                backIndex--;
+            }
+        }
+        
+        return sortedArray;
     }
 }
