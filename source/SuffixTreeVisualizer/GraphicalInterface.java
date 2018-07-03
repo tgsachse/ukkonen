@@ -58,7 +58,7 @@ public class GraphicalInterface extends Application {
     // Create the main scene of the program.
     private void createScene() {
         // Create pane for center of scene.
-        NodePane centerPane = new NodePane();
+        NodePane centerPane = new NodePane(20, 10, 26, 100, Color.BLACK);
         
         // Create horizontal row with text field and button for top of scene.
         HBox topBox = new HBox();
@@ -122,29 +122,50 @@ public class GraphicalInterface extends Application {
 
         return submitButton;
     }
- 
+
+    // Clean up the user's string.
+    private String sanitizeString(String string) {
+        // Accept 1 or more alphabetic characters and an optional dollar sign
+        // at the end.
+        String regex = "^[A-za-z]+\\$?$";
+       
+        if (string.length() < 1) {
+            popError("No string provided.");
+        }
+        else if (!string.matches(regex)) {
+            popError("Unknown characters in string. Only alphabetic characters are valid.");
+        }
+        else if (string.length() > MAX_LENGTH) {
+             popError(String.format("String is too long. Maximum length is %d.", MAX_LENGTH));
+        }
+        else {
+            // If the first character is a capital, make all the characters capitals.
+            if (Character.isUpperCase(string.charAt(0))) {
+                string = string.toUpperCase();
+            }
+            // Else make all the characters lowercase.
+            else {
+                string = string.toLowerCase();
+            }
+
+            return string;
+        }
+
+        return null;
+    }
+
     // Create and draw a suffix tree to the pane, based on the string
     // in the text field.
     private void createTree(NodePane pane, TextField field) {
-        string = field.getText();
+        string = sanitizeString(field.getText());
         
-        // Hard cap the max length of a string so the trees don't look terrible.
-        if (string.length() > MAX_LENGTH) {
-            StringBuilder error = new StringBuilder();
-            
-            error.append("Your string is too long.");
-            error.append("The maximum length this program can handle is ");
-            error.append(MAX_LENGTH);
-            error.append(".");
-            
-            popError(error.toString());
-        }
-        else {
-            // Clear any previous trees from the screen.
-            pane.getChildren().clear();
-
+        // Clear any previous trees from the screen.
+        pane.getChildren().clear();
+       
+        // Sanitization will return null if something goes wrong. Check for
+        // that here.
+        if (string != null) {
             SuffixTree tree = new SuffixTree(string);
-        
             tree.draw(pane, MIN_WIDTH);
         }
     }
@@ -193,9 +214,34 @@ public class GraphicalInterface extends Application {
     }
 }
 
+// A pane for nodes of a suffix tree.
 class NodePane extends Pane {
     int height = 600;//
     int width = 400;//
+    private int radius;
+    private Color color;
+    private int fontSize;
+    private int thickness;
+    private int minimumLength;
+
+    // Initialize a new NodePane with provided parameters.
+    public NodePane(int radius, int thickness, int fontSize, int minimumLength, Color color) {
+        this.color = color;
+        this.radius = radius;
+        this.fontSize = fontSize;
+        this.thickness = thickness;
+        this.minimumLength = minimumLength;
+    }
+
+    // Get the radius of a node in the pane.
+    public int getRadius() {
+        return radius;
+    }
+
+    // Get the minimum length of an edge.
+    public int getMinimumLength() {
+        return minimumLength;
+    }
 
     // Work in progress!!!
     public void export(Stage stage) {
@@ -217,12 +263,7 @@ class NodePane extends Pane {
     }
 
     // Draw a node to the pane.
-    public void drawNode(int nodeX,
-                         int nodeY,
-                         int radius,
-                         int thickness,
-                         Node node,
-                         Color color) {
+    public void drawNode(int nodeX, int nodeY, Node node) {
         final int innerRadius = radius - (thickness / 2);
         
         Circle outer = new Circle(nodeX, nodeY, radius, color);
@@ -233,7 +274,8 @@ class NodePane extends Pane {
         // If this node is a leaf, print the suffix terminus inside the circle.
         if (node != null && node.getTerminus() >= 0) {
             Text text = new Text(Integer.toString(node.getTerminus()));
-            
+            text.setFont(new Font(fontSize));
+
             double textX = nodeX - text.prefWidth(-1) / 2;
             double textY = nodeY - text.prefHeight(-1) / 2;
             
@@ -250,6 +292,7 @@ class NodePane extends Pane {
        
         Text text = new Text(suffix);
         text.setTextAlignment(TextAlignment.CENTER);
+        text.setFont(new Font(fontSize));
         Line line = new Line(startX, startY, endX, endY);
 
         // The x and y coordinates for the text node. The text is placed

@@ -3,59 +3,25 @@
 package SuffixTreeVisualizer;
 
 import java.util.*;
-import javafx.scene.text.*;
-import javafx.scene.paint.*;
-import javafx.scene.shape.*;
-import javafx.scene.layout.*;
 
 // Provides a suffix tree that can be built and printed in JavaFX.
 public class SuffixTree {
     private Node root;
-    private int radius;
-    private Color color;
-    private int fontSize;
     private String string;
-    private int thickness;
-    private int minimumLength;
+    private char charShift;
 
     private final int SENTINEL = -1;
     private final int CHILDREN = 26;
     private final boolean DEBUG = false;
 
-    // Constructor that builds the tree with some sensible defaults.
+    // Constructor that automatically builds the suffix tree.
     public SuffixTree(String string) {
-        radius = 20;
-        fontSize = 24;
-        minimumLength = 100;
-        thickness = 10;
-        color = Color.BLACK;
-        
         this.string = string;
         
-        build();
-        
-        if (DEBUG) {
-            printDebuggingInformation();
-        }
-    }
-
-    // Constructor builds the tree with custom visual parameters.
-    public SuffixTree(String string,
-                      Color color,
-                      int radius,
-                      int fontSize,
-                      int thickness,
-                      int minimumLength) {
-        
-        this.color = color;
-        this.string = string;
-        this.radius = radius;
-        this.fontSize = fontSize;
-        this.minimumLength = minimumLength;
-        this.thickness = thickness;
+        charShift = (Character.isUpperCase(string.charAt(0))) ? 'A' : 'a';
 
         build();
-
+        
         if (DEBUG) {
             printDebuggingInformation();
         }
@@ -87,7 +53,7 @@ public class SuffixTree {
             remaining++;
            
             // Get the integer value of the character at the current string index.
-            int childIndex = string.charAt(stringIndex) - 'a';
+            int childIndex = string.charAt(stringIndex) - charShift;
 
             // Perform the algorithm as long as there are suffixes remaining.
             while (remaining > 0) {
@@ -142,7 +108,7 @@ public class SuffixTree {
                     }
                     // Else the characters don't match and we need a new node.
                     else {
-                        int compareIndex = string.charAt(child.getStart() + length) - 'a';
+                        int compareIndex = string.charAt(child.getStart() + length) - charShift;
 
                         // Set the child's new stopping point, then create two new
                         // nodes. The first is for the rest of the child's old edge, and
@@ -191,7 +157,7 @@ public class SuffixTree {
                         }
                         // Else adjust the path and length values of the parameter triple.
                         else {
-                            path = string.charAt(stringIndex - length + 1) - 'a';
+                            path = string.charAt(stringIndex - length + 1) - charShift;
                             length--;
                         }
                         
@@ -211,7 +177,7 @@ public class SuffixTree {
     // starting at the root of the tree, with an initial depth of radius and
     // an inset of zero.
     public void draw(NodePane pane, int width) {
-        draw(pane, root, width, radius, 0);
+        draw(pane, root, width, pane.getRadius(), 0);
     }
 
     // Recursively draw each node and it's edges.
@@ -226,7 +192,7 @@ public class SuffixTree {
         final int centerY = depth;
         final int centerX = inset + (width / 2);
 
-        int length = minimumLength;
+        int length = pane.getMinimumLength();
 
 
         // Collect all the children into an array and adjust length appropriately.
@@ -257,7 +223,7 @@ public class SuffixTree {
         }
 
         // Draw the node.
-        pane.drawNode(centerX, centerY, radius, thickness, node, color);
+        pane.drawNode(centerX, centerY, node);
 
         // Recursively call this function on all the children.
         childCount = 0;
