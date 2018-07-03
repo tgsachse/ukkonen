@@ -173,7 +173,7 @@ public class GraphicalInterface extends Application {
     }
 
     // Show a popup error.
-    public static void popError(String error) {
+    private void popError(String error) {
         Alert alert = new Alert(AlertType.ERROR);
         
         alert.setTitle("Something happened...");
@@ -253,7 +253,8 @@ class NodePane extends Pane {
 
     public void export(Stage stage) {
         FileChooser chooser = new FileChooser();
-        chooser.getExtensionFilters().add(new ExtensionFilter("png files (*.png)", "*.png"));
+        chooser.getExtensionFilters().add(new ExtensionFilter("png files", "*.png"));
+        chooser.setInitialFileName("tree.png");
         File file = chooser.showSaveDialog(stage);
 
         if (file != null) {
