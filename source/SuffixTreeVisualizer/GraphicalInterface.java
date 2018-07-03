@@ -58,7 +58,7 @@ public class GraphicalInterface extends Application {
     // Create the main scene of the program.
     private void createScene() {
         // Create pane for center of scene.
-        NodePane centerPane = new NodePane(20, 10, 26, 100, Color.BLACK);
+        NodePane centerPane = new NodePane(20, 5, 22, 150, Color.BLACK);
         
         // Create horizontal row with text field and button for top of scene.
         HBox topBox = new HBox();
@@ -218,9 +218,9 @@ public class GraphicalInterface extends Application {
 class NodePane extends Pane {
     int height = 600;//
     int width = 400;//
+    private Font font;
     private int radius;
     private Color color;
-    private int fontSize;
     private int thickness;
     private int minimumLength;
 
@@ -228,7 +228,7 @@ class NodePane extends Pane {
     public NodePane(int radius, int thickness, int fontSize, int minimumLength, Color color) {
         this.color = color;
         this.radius = radius;
-        this.fontSize = fontSize;
+        font = new Font(fontSize);
         this.thickness = thickness;
         this.minimumLength = minimumLength;
     }
@@ -274,7 +274,7 @@ class NodePane extends Pane {
         // If this node is a leaf, print the suffix terminus inside the circle.
         if (node != null && node.getTerminus() >= 0) {
             Text text = new Text(Integer.toString(node.getTerminus()));
-            text.setFont(new Font(fontSize));
+            text.setFont(font);
 
             double textX = nodeX - text.prefWidth(-1) / 2;
             double textY = nodeY - text.prefHeight(-1) / 2;
@@ -286,13 +286,14 @@ class NodePane extends Pane {
     }
 
     // Draw an edge with appropriate suffix to the pane. This function was *very*
-    // stressful to write.
+    // stressful to write. This entire function can probably be reduced with some
+    // math tricks but time constraints force me to move on.
     public void drawEdge(int startX, int startY, int endX, int endY, String suffix) {
-        final int textOffset = 10;
+        final int textOffset = 15;
        
         Text text = new Text(suffix);
+        text.setFont(font);
         text.setTextAlignment(TextAlignment.CENTER);
-        text.setFont(new Font(fontSize));
         Line line = new Line(startX, startY, endX, endY);
 
         // The x and y coordinates for the text node. The text is placed
@@ -304,24 +305,22 @@ class NodePane extends Pane {
         // Calculate the angle of the edge.
         double rise = startY - endY;
         double run = startX - endX;
-        double degrees = Math.toDegrees(Math.atan2(rise, run));
-
-        // If the angle is basically vertical, offset the text in the x direction.
-        if (degrees > -95 && degrees < -85) {
-            textX -= textOffset;
-        }
-        // Else offset in the y direction.
-        else {
-            textY -= textOffset;
-        }
+        double radianAngle = Math.atan2(rise, run);
+        double degreeAngle = Math.toDegrees(radianAngle);
 
         // If the angle is extreme enough to result in upside down text, decrease the
         // degree so the text will remain upright.
-        if (degrees < -90) {
-            degrees -= 180;
+        if (degreeAngle < -90) {
+            degreeAngle -= 180;
         }
+
+        // Offset the text from the lines. There is probably a cleaner math way to do
+        // this.
+        double textXOffset = textOffset * Math.abs(Math.sin(radianAngle));
+        textX += (radianAngle < -(Math.PI / 2)) ? textXOffset : -textXOffset;
+        textY -= (textOffset * Math.abs(Math.cos(radianAngle)));
         
-        text.setRotate(degrees);
+        text.setRotate(degreeAngle);
         text.relocate(textX, textY); 
 
         getChildren().addAll(line, text);
