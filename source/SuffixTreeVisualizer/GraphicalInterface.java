@@ -5,35 +5,33 @@ package SuffixTreeVisualizer;
 // What a nightmare of an import block, am I right?
 import java.io.*;
 import java.awt.image.*;
+import javax.imageio.*;
 import javafx.event.*;
 import javafx.stage.*;
 import javafx.stage.FileChooser.*;
 import javafx.scene.*;
 import javafx.scene.text.*;
 import javafx.scene.image.*;
+import javafx.scene.shape.*;
 import javafx.scene.input.*;
 import javafx.scene.paint.*;
 import javafx.scene.canvas.*;
 import javafx.scene.layout.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.*;
-import javax.imageio.*;
 import javafx.geometry.*;
 import javafx.embed.swing.*;
 import javafx.application.*;
-
-import javafx.scene.shape.*;
 
 // A GUI class to display suffix trees.
 public class GraphicalInterface extends Application {
     private Stage stage;
     private Scene scene;
     private String string;
+
     final private int MAX_LENGTH = 20;
     final private int MIN_HEIGHT = 800;
     final private int MIN_WIDTH = 1000;
-    final private int CANVAS_WIDTH = MIN_WIDTH;//
-    final private int CANVAS_HEIGHT = MIN_HEIGHT - 200;//
     final private String TITLE = "Suffix Tree Visualizer";
     final private String STYLESHEET = "Styles/DefaultStyle.css";
    
@@ -60,7 +58,7 @@ public class GraphicalInterface extends Application {
     // Create the main scene of the program.
     private void createScene() {
         // Create pane for center of scene.
-        NodePane centerPane = new NodePane(stage);
+        NodePane centerPane = new NodePane();
         
         // Create horizontal row with text field and button for top of scene.
         HBox topBox = new HBox();
@@ -97,6 +95,7 @@ public class GraphicalInterface extends Application {
         stringField.setPromptText("enter a string here");
         stringField.setPrefWidth(380);
 
+        // Create the suffix tree on Enter.
         stringField.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent key) {
@@ -186,7 +185,7 @@ public class GraphicalInterface extends Application {
         exportButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
-                pane.export();
+                pane.export(stage);
             }
         });
 
@@ -197,13 +196,9 @@ public class GraphicalInterface extends Application {
 class NodePane extends Pane {
     int height = 600;//
     int width = 400;//
-    Stage stage;
 
-    public NodePane(Stage stage) {
-        this.stage = stage;
-    }
-
-    public void export() {
+    // Work in progress!!!
+    public void export(Stage stage) {
         FileChooser chooser = new FileChooser();
         chooser.getExtensionFilters().add(new ExtensionFilter("png files (*.png)", "*.png"));
         File file = chooser.showSaveDialog(stage);
@@ -221,12 +216,12 @@ class NodePane extends Pane {
         }
     }
 
+    // Draw a node to the pane.
     public void drawNode(int nodeX,
                          int nodeY,
                          int radius,
                          int thickness,
-                         int index,
-                         boolean leaf,
+                         Node node,
                          Color color) {
         final int innerRadius = radius - (thickness / 2);
         
@@ -235,11 +230,15 @@ class NodePane extends Pane {
         
         getChildren().addAll(outer, inner);
 
-        if (leaf) {
-            Text text = new Text(Integer.toString(index));
+        // If this node is a leaf, print the suffix terminus inside the circle.
+        if (node != null && node.getTerminus() >= 0) {
+            Text text = new Text(Integer.toString(node.getTerminus()));
+            
             double textX = nodeX - text.prefWidth(-1) / 2;
             double textY = nodeY - text.prefHeight(-1) / 2;
+            
             text.relocate(textX, textY);
+            
             getChildren().add(text);
         }
     }

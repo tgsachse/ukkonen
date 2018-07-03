@@ -2,6 +2,7 @@
 
 package SuffixTreeVisualizer;
 
+import java.util.*;
 import javafx.scene.text.*;
 import javafx.scene.paint.*;
 import javafx.scene.shape.*;
@@ -10,11 +11,11 @@ import javafx.scene.layout.*;
 // Provides a suffix tree that can be built and printed in JavaFX.
 public class SuffixTree {
     private Node root;
+    private int radius;
     private Color color;
     private int fontSize;
-    private int diameter;
     private String string;
-    private int ovalThickness;
+    private int thickness;
     private int minimumLength;
 
     private final int SENTINEL = -1;
@@ -23,10 +24,10 @@ public class SuffixTree {
 
     // Constructor that builds the tree with some sensible defaults.
     public SuffixTree(String string) {
-        diameter = 40;
+        radius = 20;
         fontSize = 24;
         minimumLength = 100;
-        ovalThickness = 10;
+        thickness = 10;
         color = Color.BLACK;
         
         this.string = string;
@@ -41,17 +42,17 @@ public class SuffixTree {
     // Constructor builds the tree with custom visual parameters.
     public SuffixTree(String string,
                       Color color,
-                      int diameter,
+                      int radius,
                       int fontSize,
-                      int ovalThickness,
+                      int thickness,
                       int minimumLength) {
         
         this.color = color;
         this.string = string;
-        this.diameter = diameter;
+        this.radius = radius;
         this.fontSize = fontSize;
         this.minimumLength = minimumLength;
-        this.ovalThickness = ovalThickness;
+        this.thickness = thickness;
 
         build();
 
@@ -207,10 +208,10 @@ public class SuffixTree {
     }
 
     // Wrapper to draw the tree onto a context. This calls the recursive draw function
-    // starting at the root of the tree, with an initial depth of diameter and
+    // starting at the root of the tree, with an initial depth of radius and
     // an inset of zero.
     public void draw(NodePane pane, int width) {
-        draw(pane, root, width, diameter, 0);
+        draw(pane, root, width, radius, 0);
     }
 
     // Recursively draw each node and it's edges.
@@ -221,26 +222,20 @@ public class SuffixTree {
         }
         
         // A bunch of geometric variables used for drawing the ovals and edges.
-        final int centerX = inset + (width / 2);
         // I just renamed depth here to match centerX...
         final int centerY = depth;
-        final int ovalX = centerX - (diameter / 2);
-        final int ovalY = centerY - (diameter / 2);
-        final int innerDiameter = diameter - ovalThickness;
-        final int innerOvalX = ovalX + (ovalThickness / 2);
-        final int innerOvalY = ovalY + (ovalThickness / 2);
+        final int centerX = inset + (width / 2);
 
         int length = minimumLength;
 
-        // Count up all the children of this node.
-        int children = 0;
+
+        // Collect all the children into an array and adjust length appropriately.
+        ArrayList<Node> children = new ArrayList<>();
         for (int childIndex = 0; childIndex < CHILDREN; childIndex++) {
             Node child = node.getChild(childIndex);
             if (child != null) {
-                children++;
-                
-                // Set the length of the edges in this draw session to be the largest of all
-                // the children's lengths, assuming any are larger than minimumLength.
+                children.add(child);
+
                 if (child.getLength() > length) {
                     length = child.getLength();
                 }
@@ -248,39 +243,30 @@ public class SuffixTree {
         }
 
         // Calculate how many horizontal slices are available based on the number of children.
-        int widthSegment = width / ((children > 0) ? children : 1);
+        int widthSegment = width / ((children.size() > 0) ? children.size() : 1);
 
-        for (int i = 0; i < children; i++) {
-            int target = inset + (widthSegment / 2) + (i * widthSegment);
-            pane.drawEdge(centerX, centerY, target, centerY + length, "hell");
+        // Draw the edges going to each child.
+        int childCount = 0;
+        for (Node child : children) {
+            int targetX = inset + (widthSegment / 2) + (childCount * widthSegment);
+            String suffix = child.getSuffix(string);
+
+            pane.drawEdge(centerX, centerY, targetX, centerY + length, suffix);
+
+            childCount++;
         }
 
-
-        pane.drawNode(centerX, centerY, diameter / 2, ovalThickness, node.getTerminus(), true, color);
-        /*
-        // Draw two ovals, the outer oval being the color of the tree, and the
-        // inner oval being white.
-        StackPane ovalPane = new StackPane();
-        System.out.printf("x%d y%d d%d\n", ovalX, ovalY, diameter/2);
-        Circle outerOval = new Circle(ovalX, ovalY, diameter/2, color);//
-        //Circle outerOval = new Circle(400, 25, 16, color);//
-        Circle innerOval = new Circle(innerOvalX, innerOvalY, innerDiameter/2, Color.WHITE);
-        ovalPane.getChildren().addAll(outerOval, innerOval);
-        if (node.getTerminus() != SENTINEL) {
-            Text text = new Text(Integer.toString(node.getTerminus()));
-            ovalPane.getChildren().add(text);
-        }
-        ovalPane.relocate(ovalX, ovalY);
-        pane.getChildren().add(ovalPane);//, innerOval);
-        */
+        // Draw the node.
+        pane.drawNode(centerX, centerY, radius, thickness, node, color);
 
         // Recursively call this function on all the children.
-        for (int i = 0, j = 0; i < CHILDREN; i++) {
-            if (node.getChild(i) != null) {
-                int newInset = inset + widthSegment * j;
-                draw(pane, node.getChild(i), widthSegment, depth + length, newInset);
-                j++;
-            }
+        childCount = 0;
+        for (Node child : children) {
+            int newInset = inset + widthSegment * childCount;
+
+            draw(pane, child, widthSegment, depth + length, newInset);
+
+            childCount++;
         }
     }
 
@@ -387,6 +373,11 @@ class Node {
         else {
             return index - start;
         }
+    }
+
+    // Get the string represented by the start and stop indices of the node.
+    public String getSuffix(String string) {
+        return string.substring(start, stop);
     }
 
     // Getter for starting index of substring on incoming edge.
