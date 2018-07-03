@@ -11,8 +11,8 @@ public class SuffixTree {
     private char charShift;
 
     private final int SENTINEL = -1;
-    private final int CHILDREN = 26;
-    private final boolean DEBUG = false;
+    private final int CHILDREN = 27;
+    private final boolean DEBUG = true;
 
     // Constructor that automatically builds the suffix tree.
     public SuffixTree(String string) {
@@ -33,13 +33,12 @@ public class SuffixTree {
     // in advance, but if you really want to know how this algorithm works I suggest
     // looking up some (much better) articles.
     private void build() {
-        // POTENTIAL BUG: Dunno what happens if string is zero.
         root = new Node(0, 0, SENTINEL, CHILDREN);
        
         // Parameter triple to track location in the tree.
-        int path = SENTINEL;
         int length = 0;
         int remaining = 0;
+        int path = SENTINEL;
 
         Node current = root;
 
@@ -52,8 +51,15 @@ public class SuffixTree {
             Node previous = null;
             remaining++;
            
+            
             // Get the integer value of the character at the current string index.
-            int childIndex = string.charAt(stringIndex) - charShift;
+            int childIndex;
+            if (string.charAt(stringIndex) == '$') {
+                childIndex = CHILDREN - 1;
+            }
+            else {
+                childIndex = string.charAt(stringIndex) - charShift;
+            }
 
             // Perform the algorithm as long as there are suffixes remaining.
             while (remaining > 0) {
@@ -81,10 +87,14 @@ public class SuffixTree {
                     else {
                         path = childIndex;
                         length++;
+                        // Adjust the current node if the length extends past the
+                        // present child's edge.
+                        if (length >= current.getChild(childIndex).getLength(stringIndex)) {
+                            path = SENTINEL;
+                            length = 0;
+                            current = current.getChild(childIndex);
+                        }
                         break;
-                        // POTENTIAL BUG: if this addition to length pushes into a
-                        // child node then this would probably break the code. Very fixable
-                        // and will be tested soon.
                     }
                 }
                 // Else check down an edge.
@@ -157,8 +167,29 @@ public class SuffixTree {
                         }
                         // Else adjust the path and length values of the parameter triple.
                         else {
-                            path = string.charAt(stringIndex - length + 1) - charShift;
-                            length--;
+                            //if (length < 2) {
+                              //  path = SENTINEL;
+                            //}
+                            //else {
+                            if (length - 1 == 0) {
+                                path = SENTINEL;
+                                length--;
+                            }else {//now missing final $
+                              path = string.charAt(stringIndex - length + 1) - charShift;
+                              System.out.printf("i%d l%d\n", stringIndex, length);
+                              System.out.printf("path%d\n", path);
+                                length--;
+                                if (length >= current.getChild(path).getLength(stringIndex)) {//
+                                    current = current.getChild(path);
+                                    path = SENTINEL;
+                                    length = 0;
+                                }
+                            }
+                            //}
+                            //System.out.printf("%d length\n", length);
+                            //length--;
+
+
                         }
                         
                         // One down! Several to go...
@@ -328,9 +359,9 @@ class Node implements Comparable<Node> {
     private int length;
     private int terminus;
     private Integer height;
+    private int childCount;
     private Node[] children;
     private Node suffixLink;
-    private int childCount;
 
     // Construct a node with a provided terminus, as well as indices for the substring
     // contained on the edge leading into the node.
