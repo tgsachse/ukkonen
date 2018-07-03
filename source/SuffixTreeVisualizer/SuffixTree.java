@@ -252,10 +252,12 @@ public class SuffixTree {
 
         for (int i = 0; i < children; i++) {
             int target = inset + (widthSegment / 2) + (i * widthSegment);
-           
             pane.drawEdge(centerX, centerY, target, centerY + length, "hell");
         }
 
+
+        pane.drawNode(centerX, centerY, diameter / 2, ovalThickness, node.getTerminus(), true, color);
+        /*
         // Draw two ovals, the outer oval being the color of the tree, and the
         // inner oval being white.
         StackPane ovalPane = new StackPane();
@@ -270,6 +272,7 @@ public class SuffixTree {
         }
         ovalPane.relocate(ovalX, ovalY);
         pane.getChildren().add(ovalPane);//, innerOval);
+        */
 
         // Recursively call this function on all the children.
         for (int i = 0, j = 0; i < CHILDREN; i++) {

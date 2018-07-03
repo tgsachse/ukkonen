@@ -203,55 +203,85 @@ class NodePane extends Pane {
         this.stage = stage;
     }
 
-    // NEED TESTING
-    // Export the view of this NodePane to a file. This portion of my code
-    // is largely lifted from java-buddy.blogspot.com. Thanks guys!
     public void export() {
-        // Create a chooser that allows the user to pick a file save
-        // location (with file type restrictions).
         FileChooser chooser = new FileChooser();
         chooser.getExtensionFilters().add(new ExtensionFilter("png files (*.png)", "*.png"));
-        // Get the file location from the user.
         File file = chooser.showSaveDialog(stage);
 
         if (file != null) {
             try {
-                // Take a snapshot of the pane and write it to file.
                 WritableImage image = new WritableImage(width, height);//
                 snapshot(null, image);
                 RenderedImage render = SwingFXUtils.fromFXImage(image, null);
                 ImageIO.write(render, "png", file);
             }
-            // Print the stack trace if something goes wrong with file I/O.
             catch (IOException exception) {
                 exception.printStackTrace();
             }
         }
     }
 
-    // Draw a line between coordinates with a suffix floating near it.
+    public void drawNode(int nodeX,
+                         int nodeY,
+                         int radius,
+                         int thickness,
+                         int index,
+                         boolean leaf,
+                         Color color) {
+        final int innerRadius = radius - (thickness / 2);
+        
+        Circle outer = new Circle(nodeX, nodeY, radius, color);
+        Circle inner = new Circle(nodeX, nodeY, innerRadius, Color.WHITE);
+        
+        getChildren().addAll(outer, inner);
+
+        if (leaf) {
+            Text text = new Text(Integer.toString(index));
+            double textX = nodeX - text.prefWidth(-1) / 2;
+            double textY = nodeY - text.prefHeight(-1) / 2;
+            text.relocate(textX, textY);
+            getChildren().add(text);
+        }
+    }
+
+    // Draw an edge with appropriate suffix to the pane. This function was *very*
+    // stressful to write.
     public void drawEdge(int startX, int startY, int endX, int endY, String suffix) {
-        int centerX = startX - (startX - endX) / 2;
-        int centerY = startY - (startY - endY) / 2;
+        final int textOffset = 10;
+       
         Text text = new Text(suffix);
         text.setTextAlignment(TextAlignment.CENTER);
         Line line = new Line(startX, startY, endX, endY);
 
-        double textWidthOffset = text.prefWidth(-1) / 2;
-        double textHeightOffset = text.prefHeight(-1) / 2;
-
+        // The x and y coordinates for the text node. The text is placed
+        // midway down the edge. These values are also adjusted for the size
+        // of the text.
+        double textX = startX - (startX - endX) / 2 - text.prefWidth(-1) / 2;
+        double textY = startY - (startY - endY) / 2 - text.prefHeight(-1) / 2;
+       
+        // Calculate the angle of the edge.
         double rise = startY - endY;
         double run = startX - endX;
         double degrees = Math.toDegrees(Math.atan2(rise, run));
-        int raiseX = (degrees > -95 && degrees < -85) ? 10 : 0;
 
+        // If the angle is basically vertical, offset the text in the x direction.
+        if (degrees > -95 && degrees < -85) {
+            textX -= textOffset;
+        }
+        // Else offset in the y direction.
+        else {
+            textY -= textOffset;
+        }
+
+        // If the angle is extreme enough to result in upside down text, decrease the
+        // degree so the text will remain upright.
         if (degrees < -90) {
             degrees -= 180;
         }
+        
         text.setRotate(degrees);
-        int raiseY = 10;
+        text.relocate(textX, textY); 
 
-        text.relocate(centerX - raiseX - textWidthOffset, centerY - raiseY - textHeightOffset); 
         getChildren().addAll(line, text);
     }
 }
