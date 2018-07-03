@@ -209,12 +209,12 @@ public class SuffixTree {
     // Wrapper to draw the tree onto a context. This calls the recursive draw function
     // starting at the root of the tree, with an initial depth of diameter and
     // an inset of zero.
-    public void draw(Pane pane, int width) {
+    public void draw(NodePane pane, int width) {
         draw(pane, root, width, diameter, 0);
     }
 
     // Recursively draw each node and it's edges.
-    private void draw(Pane pane, Node node, int width, int depth, int inset) {
+    private void draw(NodePane pane, Node node, int width, int depth, int inset) {
         // What good is a recursive function without a base case?
         if (node == null) {
             return;
@@ -231,10 +231,6 @@ public class SuffixTree {
         final int innerOvalY = ovalY + (ovalThickness / 2);
 
         int length = minimumLength;
-
-        // Set the color of the drawing based on the instance variable for color.
-        //context.setFill(color);
-        //context.setStroke(color);
 
         // Count up all the children of this node.
         int children = 0;
@@ -254,40 +250,10 @@ public class SuffixTree {
         // Calculate how many horizontal slices are available based on the number of children.
         int widthSegment = width / ((children > 0) ? children : 1);
 
-        // Set the target x coordinate for each edge line as i number of widthSegments,
-        // with an added left-justified offset of inset. Also offset by half of a widthSegment.
-        // The inset gives other nodes that haven't been visited yet to the left of the
-        // current node room to print their children.
         for (int i = 0; i < children; i++) {
             int target = inset + (widthSegment / 2) + (i * widthSegment);
-            StackPane linePane = new StackPane();
-            Line line = new Line(centerX - target, 0, 0, length);
-            
-            //double degrees = Math.toDegrees(Math.atan2((centerX - target), length));
-
-            int centerWidth = (target > centerX) ? centerX : target;
-            int centerHeight = centerY;
-            linePane.getChildren().add(line);
-            //make this a function
-            //
-            String suffix = "hello";//string.substring(node.getStart(), node.getStop());
-            Text suffixText = new Text(suffix);
-            suffixText.setRotate(25);
-            linePane.getChildren().add(suffixText);
-            linePane.relocate(centerWidth, centerHeight);
-            pane.getChildren().add(linePane);
-            /*
-            double slope = (centerX - target) / length;//div by zero
-            double degrees = Math.toDegrees(Math.atan2((centerX - target), length));
-            double lineLength = Math.sqrt(length * length + Math.pow(centerX - target, 2));
-            //Line line = new Line(0, 0, lineLength, 0);
-            line.setFill(color);
-            linePane.getChildren().add(line);
-            linePane.relocate(centerX - target, centerY + length);
-            linePane.setRotate(degrees);
-            pane.getChildren().add(linePane);
-            //context.strokeLine(centerX, centerY, target, centerY + length); 
-            */
+           
+            pane.drawEdge(centerX, centerY, target, centerY + length, "hell");
         }
 
         // Draw two ovals, the outer oval being the color of the tree, and the
@@ -304,20 +270,6 @@ public class SuffixTree {
         }
         ovalPane.relocate(ovalX, ovalY);
         pane.getChildren().add(ovalPane);//, innerOval);
-
-        /* 
-        context.fillOval(ovalX, ovalY, diameter, diameter);
-        context.setFill(Color.WHITE);
-        context.fillOval(innerOvalX, innerOvalY, innerDiameter, innerDiameter);
-        context.setFill(color);
-        */
-
-        //************************************************ CONSTRUCTION AREA
-        //context.setTextAlign(TextAlignment.CENTER);
-        //context.setFont(new Font(fontSize));
-        //context.fillText(Integer.toString(node.terminus), centerX, centerY);
-        //context.fillText(string.substring(node.getStart(), node.getStop()), centerX, centerY);
-        //*********************************************
 
         // Recursively call this function on all the children.
         for (int i = 0, j = 0; i < CHILDREN; i++) {

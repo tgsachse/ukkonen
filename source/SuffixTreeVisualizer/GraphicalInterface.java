@@ -32,8 +32,8 @@ public class GraphicalInterface extends Application {
     final private int MAX_LENGTH = 20;
     final private int MIN_HEIGHT = 800;
     final private int MIN_WIDTH = 1000;
-    final private int CANVAS_WIDTH = MIN_WIDTH;
-    final private int CANVAS_HEIGHT = MIN_HEIGHT - 200;
+    final private int CANVAS_WIDTH = MIN_WIDTH;//
+    final private int CANVAS_HEIGHT = MIN_HEIGHT - 200;//
     final private String TITLE = "Suffix Tree Visualizer";
     final private String STYLESHEET = "Styles/DefaultStyle.css";
    
@@ -60,7 +60,7 @@ public class GraphicalInterface extends Application {
     // Create the main scene of the program.
     private void createScene() {
         // Create pane for center of scene.
-        Pane centerPane = new Pane();
+        NodePane centerPane = new NodePane(stage);
         
         // Create horizontal row with text field and button for top of scene.
         HBox topBox = new HBox();
@@ -92,7 +92,7 @@ public class GraphicalInterface extends Application {
     }
 
     // Create a text field that accepts a suffix string.
-    private TextField getStringField(Pane pane) {
+    private TextField getStringField(NodePane pane) {
         TextField stringField = new TextField();
         stringField.setPromptText("enter a string here");
         stringField.setPrefWidth(380);
@@ -110,7 +110,7 @@ public class GraphicalInterface extends Application {
     }
 
     // Create a submit button for the text field.
-    private Button getSubmitButton(TextField field, Pane pane) {
+    private Button getSubmitButton(TextField field, NodePane pane) {
         Button submitButton = new Button("submit");
         
         // Set the action of the button using this gorgeous syntax.
@@ -126,10 +126,9 @@ public class GraphicalInterface extends Application {
  
     // Create and draw a suffix tree to the pane, based on the string
     // in the text field.
-    private void createTree(Pane pane, TextField field) {
-        //GraphicsContext context = pane.getGraphicsContext2D();
-        
+    private void createTree(NodePane pane, TextField field) {
         string = field.getText();
+        
         // Hard cap the max length of a string so the trees don't look terrible.
         if (string.length() > MAX_LENGTH) {
             StringBuilder error = new StringBuilder();
@@ -143,12 +142,10 @@ public class GraphicalInterface extends Application {
         }
         else {
             // Clear any previous trees from the screen.
-            //context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); 
             pane.getChildren().clear();
 
             SuffixTree tree = new SuffixTree(string);
         
-            //pane.getChildren().add(new Circle(MIN_WIDTH/2, 600, 50));
             tree.draw(pane, MIN_WIDTH);
         }
     }
@@ -182,38 +179,79 @@ public class GraphicalInterface extends Application {
     }
    
     // Create an export button to save the pane to a file.
-    private Button getExportButton(Pane pane) {
+    private Button getExportButton(NodePane pane) {
         Button exportButton = new Button("export");
 
-        // Set the action of the button. This portion of my code is largely
-        // lifted from java-buddy.blogspot.com. Thanks guys!
+        // Set the action of the button.
         exportButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
-                // Create a chooser that allows the user to pick a file save
-                // location (with file type restrictions).
-                FileChooser chooser = new FileChooser();
-                chooser.getExtensionFilters().add(new ExtensionFilter("png files (*.png)",
-                                                                      "*.png"));
-                // Get the file location from the user.
-                File file = chooser.showSaveDialog(stage);
-
-                if (file != null) {
-                    try {
-                        // Take a snapshot of the pane and write it to file.
-                        WritableImage image = new WritableImage(CANVAS_WIDTH, CANVAS_HEIGHT);
-                        pane.snapshot(null, image);
-                        RenderedImage render = SwingFXUtils.fromFXImage(image, null);
-                        ImageIO.write(render, "png", file);
-                    }
-                    // Print the error if something goes wrong with file I/O.
-                    catch (IOException exception) {
-                        exception.printStackTrace();
-                    }
-                }
+                pane.export();
             }
         });
 
         return exportButton;
+    }
+}
+
+class NodePane extends Pane {
+    int height = 600;//
+    int width = 400;//
+    Stage stage;
+
+    public NodePane(Stage stage) {
+        this.stage = stage;
+    }
+
+    // NEED TESTING
+    // Export the view of this NodePane to a file. This portion of my code
+    // is largely lifted from java-buddy.blogspot.com. Thanks guys!
+    public void export() {
+        // Create a chooser that allows the user to pick a file save
+        // location (with file type restrictions).
+        FileChooser chooser = new FileChooser();
+        chooser.getExtensionFilters().add(new ExtensionFilter("png files (*.png)", "*.png"));
+        // Get the file location from the user.
+        File file = chooser.showSaveDialog(stage);
+
+        if (file != null) {
+            try {
+                // Take a snapshot of the pane and write it to file.
+                WritableImage image = new WritableImage(width, height);//
+                snapshot(null, image);
+                RenderedImage render = SwingFXUtils.fromFXImage(image, null);
+                ImageIO.write(render, "png", file);
+            }
+            // Print the stack trace if something goes wrong with file I/O.
+            catch (IOException exception) {
+                exception.printStackTrace();
+            }
+        }
+    }
+
+    // Draw a line between coordinates with a suffix floating near it.
+    public void drawEdge(int startX, int startY, int endX, int endY, String suffix) {
+        int centerX = startX - (startX - endX) / 2;
+        int centerY = startY - (startY - endY) / 2;
+        Text text = new Text(suffix);
+        text.setTextAlignment(TextAlignment.CENTER);
+        Line line = new Line(startX, startY, endX, endY);
+
+        double textWidthOffset = text.prefWidth(-1) / 2;
+        double textHeightOffset = text.prefHeight(-1) / 2;
+
+        double rise = startY - endY;
+        double run = startX - endX;
+        double degrees = Math.toDegrees(Math.atan2(rise, run));
+        int raiseX = (degrees > -95 && degrees < -85) ? 10 : 0;
+
+        if (degrees < -90) {
+            degrees -= 180;
+        }
+        text.setRotate(degrees);
+        int raiseY = 10;
+
+        text.relocate(centerX - raiseX - textWidthOffset, centerY - raiseY - textHeightOffset); 
+        getChildren().addAll(line, text);
     }
 }
