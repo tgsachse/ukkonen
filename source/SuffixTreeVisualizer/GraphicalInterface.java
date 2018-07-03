@@ -58,7 +58,7 @@ public class GraphicalInterface extends Application {
     // Create the main scene of the program.
     private void createScene() {
         // Create pane for center of scene.
-        NodePane centerPane = new NodePane(20, 5, 22, 150, Color.BLACK);
+        NodePane centerPane = new NodePane();
         
         // Create horizontal row with text field and button for top of scene.
         HBox topBox = new HBox();
@@ -79,7 +79,7 @@ public class GraphicalInterface extends Application {
         mainPane.setTop(topBox);
         mainPane.setCenter(centerPane);
         mainPane.setBottom(bottomBox);
-        
+       
         // Initialize the scene with the main border pane.
         scene = new Scene(mainPane, MIN_WIDTH, MIN_HEIGHT); 
         
@@ -161,7 +161,9 @@ public class GraphicalInterface extends Application {
         
         // Clear any previous trees from the screen.
         pane.getChildren().clear();
-       
+
+        pane.resetSizeParameters();
+
         // Sanitization will return null if something goes wrong. Check for
         // that here.
         if (string != null) {
@@ -171,7 +173,7 @@ public class GraphicalInterface extends Application {
     }
 
     // Show a popup error.
-    private void popError(String error) {
+    public static void popError(String error) {
         Alert alert = new Alert(AlertType.ERROR);
         
         alert.setTitle("Something happened...");
@@ -216,21 +218,27 @@ public class GraphicalInterface extends Application {
 
 // A pane for nodes of a suffix tree.
 class NodePane extends Pane {
-    int height = 600;//
-    int width = 400;//
-    private Font font;
-    private int radius;
-    private Color color;
-    private int thickness;
-    private int minimumLength;
+    private int maxY;
+    private int maxX;
+    private int minY;
+    private int minX;
 
-    // Initialize a new NodePane with provided parameters.
-    public NodePane(int radius, int thickness, int fontSize, int minimumLength, Color color) {
-        this.color = color;
-        this.radius = radius;
-        font = new Font(fontSize);
-        this.thickness = thickness;
-        this.minimumLength = minimumLength;
+    final private int radius = 20;
+    final private int thickness = 5;
+    final private int minimumLength = 150;
+    final private Font font = new Font(22);
+    final private Color color = Color.BLACK;
+
+    // Initialize a new NodePane.
+    public NodePane() {
+        resetSizeParameters();
+    }
+
+    public void resetSizeParameters() {
+        maxY = Integer.MIN_VALUE;
+        maxX = Integer.MIN_VALUE;
+        minY = Integer.MAX_VALUE;
+        minX = Integer.MAX_VALUE;
     }
 
     // Get the radius of a node in the pane.
@@ -243,7 +251,6 @@ class NodePane extends Pane {
         return minimumLength;
     }
 
-    // Work in progress!!!
     public void export(Stage stage) {
         FileChooser chooser = new FileChooser();
         chooser.getExtensionFilters().add(new ExtensionFilter("png files (*.png)", "*.png"));
@@ -251,9 +258,20 @@ class NodePane extends Pane {
 
         if (file != null) {
             try {
-                WritableImage image = new WritableImage(width, height);//
-                snapshot(null, image);
+                maxX += radius;
+                minX -= radius;
+                minY += 85 - radius;
+                maxY += 85 + radius;
+                
+                int width = maxX - minX;
+                int height = maxY - minY;
+                
+                SnapshotParameters parameters = new SnapshotParameters();
+                parameters.setViewport(new Rectangle2D(minX, minY, width, height));
+                
+                WritableImage image = snapshot(parameters, null);
                 RenderedImage render = SwingFXUtils.fromFXImage(image, null);
+                
                 ImageIO.write(render, "png", file);
             }
             catch (IOException exception) {
@@ -265,7 +283,20 @@ class NodePane extends Pane {
     // Draw a node to the pane.
     public void drawNode(int nodeX, int nodeY, Node node) {
         final int innerRadius = radius - (thickness / 2);
-        
+
+        if (nodeX > maxX) {
+            maxX = nodeX + radius;
+        }
+        if (nodeY > maxY) {
+            maxY = nodeY + radius;
+        }
+        if (nodeX < minX) {
+            minX = nodeX - radius;
+        }
+        if (nodeY < minY) {
+            minY = nodeY - radius;
+        }
+
         Circle outer = new Circle(nodeX, nodeY, radius, color);
         Circle inner = new Circle(nodeX, nodeY, innerRadius, Color.WHITE);
         
