@@ -183,6 +183,7 @@ public class SuffixTree {
                                     current = current.getChild(path);
                                     path = SENTINEL;
                                     length = 0;
+                                    System.out.printf("this work %s\n", current.toString());
                                 }
                             }
                             //}
