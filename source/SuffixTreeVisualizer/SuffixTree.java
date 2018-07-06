@@ -27,6 +27,46 @@ public class SuffixTree {
         }
     }
 
+    private void build() {
+        int head = 0;
+        int tail = 0;
+    
+        root = new Node(0, 0, SENTINEL, CHILDREN);
+
+        Node current = root;
+        int childPath = SENTINEL;
+        int distance = 0;
+
+
+        while (tail < string.length()) {
+            Node previous = null;
+            char letter = string.charAt(head);
+
+            Node child = current.getChild(childPath);
+            char letter2 = string.charAt(child.getStart() + distance);
+
+            if (letter == letter2) {
+                head++;
+                distance++;
+
+                if (distance >= child.getStop()) {
+                    current = child;
+                    distance = 0;
+                    childPath = SENTINEL;
+                }
+            }
+            else {
+                
+            
+            
+            }
+        
+        
+        
+        }
+    }
+
+
     // Build the suffix tree using Ukkonen's algorithm. This function is
     // certainly too long, but it is not easily split into subfunctions because
     // of the importance of the triple parameters from round to round. I apologize
@@ -206,7 +246,7 @@ public class SuffixTree {
 
         setHeights();
     }
-
+    
     // Wrapper to draw the tree onto a context. This calls the recursive draw function
     // starting at the root of the tree, with an initial depth of radius and
     // an inset of zero.
