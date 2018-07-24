@@ -2,9 +2,7 @@
 
 package Willow;
 
-import java.util.*;
-
-// Provides a suffix tree that can be built and printed in JavaFX.
+// A suffix tree implemented with nodes and pointers.
 public class SuffixTree {
     private Node root;
     private String string;
@@ -12,7 +10,6 @@ public class SuffixTree {
 
     private final int SENTINEL = -1;
     private final int CHILDREN = 27;
-    private final boolean DEBUG = true;
 
     // Constructor that automatically builds the suffix tree.
     public SuffixTree(String string) {
@@ -21,58 +18,13 @@ public class SuffixTree {
         charShift = (Character.isUpperCase(string.charAt(0))) ? 'A' : 'a';
 
         build();
-        
-        if (DEBUG) {
-            printDebuggingInformation();
-        }
     }
-
-    /*
-    private void build() {
-        int head = 0;
-        int tail = 0;
-    
-        root = new Node(0, 0, SENTINEL, CHILDREN);
-
-        Node current = root;
-        int childPath = SENTINEL;
-        int distance = 0;
-
-
-        while (tail < string.length()) {
-            Node previous = null;
-            char letter = string.charAt(head);
-
-            Node child = current.getChild(childPath);
-            char letter2 = string.charAt(child.getStart() + distance);
-
-            if (letter == letter2) {
-                head++;
-                distance++;
-
-                if (distance >= child.getStop()) {
-                    current = child;
-                    distance = 0;
-                    childPath = SENTINEL;
-                }
-            }
-            else {
-                
-            
-            
-            }
-        
-        
-        
-        }
-    }*/
-
 
     // Build the suffix tree using Ukkonen's algorithm. This function is
     // certainly too long, but it is not easily split into subfunctions because
     // of the importance of the triple parameters from round to round. I apologize
     // in advance, but if you really want to know how this algorithm works I suggest
-    // looking up some (much better) articles.
+    // looking up some (much better) articles. // DELETE this function.
     private void build() {
         root = new Node(0, 0, SENTINEL, CHILDREN);
        
@@ -348,48 +300,6 @@ public class SuffixTree {
             correctSentinel(node.getChild(childIndex));
         }
     }
-
-    // Public wrapper to call the recursive debugging information function,
-    // starting at the root with an initial level of zero.
-    public void printDebuggingInformation() {
-        System.out.println("TERMINUS (START, STOP) SUFFIX");
-        printDebuggingInformation(root, 0);
-    }
-
-    // Recursively print the tree to the terminal with debugging information.
-    private void printDebuggingInformation(Node node, int level) {
-        // Base case for the recursive function.
-        if (node == null) {
-            return;
-        }
-        
-        // Print some fancy bars to indicate depth of the node.
-        for (int braceCount = 0; braceCount < level; braceCount++) {
-            System.out.printf("| ");
-        }
-   
-        // Print the fundamental properties of this node.
-        String suffix = string.substring(node.getStart(), node.getStop());
-        System.out.printf("%d (%d %d) %s",
-                          node.getTerminus(),
-                          node.getStart(),
-                          node.getStop(),
-                          suffix);
-
-        // Print a message if a suffix link exists.
-        Node link = node.getLink();
-        if (link != null) {
-            System.out.printf(" | %s -> %s\n", node.toString(), link.toString());
-        }
-        else {
-            System.out.printf("\n");
-        }
-        
-        // Recursively call this function for all children of the node.
-        for (int childIndex = 0; childIndex < CHILDREN; childIndex++) {
-            printDebuggingInformation(node.getChild(childIndex), level + 1);
-        }
-    }
 }
 
 // Provides nodes for the suffix tree. This node also contains edge information.
@@ -510,39 +420,5 @@ class Node implements Comparable<Node> {
     // Setter for suffix link.
     public void setLink(Node suffixLink) {
         this.suffixLink = suffixLink;
-    }
-}
-
-class MiddleSort {
-    public static Node[] sort(Node[] array, int items) {
-        Node[] intermediateArray = new Node[items];
-
-        int nodeIndex = 0;
-        for (Node node : array) {
-            if (node != null) {
-                intermediateArray[nodeIndex] = node;
-                nodeIndex++;
-            }
-        }
-
-        Arrays.sort(intermediateArray);
-
-        Node[] sortedArray = new Node[items];
-
-        int frontIndex = 0;
-        int backIndex = items - 1;
-
-        for (int node = 0; node < items; node++) {
-            if (node % 2 == 0) {
-                sortedArray[frontIndex] = intermediateArray[node];
-                frontIndex++;
-            }
-            else {
-                sortedArray[backIndex] = intermediateArray[node];
-                backIndex--;
-            }
-        }
-        
-        return sortedArray;
     }
 }
