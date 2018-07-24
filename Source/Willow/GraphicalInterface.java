@@ -1,6 +1,6 @@
-// Part of Suffix Tree Visualizer by Tiger Sachse
+// Part of Willow by Tiger Sachse.
 
-package SuffixTreeVisualizer;
+package Willow;
 
 // What a nightmare of an import block, am I right?
 import java.io.*;
@@ -32,8 +32,8 @@ public class GraphicalInterface extends Application {
     final private int MAX_LENGTH = 20;
     final private int MIN_HEIGHT = 800;
     final private int MIN_WIDTH = 1000;
-    final private String TITLE = "Suffix Tree Visualizer";
-    final private String STYLESHEET = "Styles/DefaultStyle.css";
+    final private String TITLE = "Willow";
+    final private String STYLESHEET = "Styles/Default.css";
    
     // Entry point to the program.
     public static void main(String[] args) {

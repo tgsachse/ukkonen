@@ -1,6 +1,6 @@
-// Part of Suffix Tree Visualizer by Tiger Sachse
+// Part of Willow by Tiger Sachse
 
-package SuffixTreeVisualizer;
+package Willow;
 
 import java.util.*;
 
@@ -27,6 +27,7 @@ public class SuffixTree {
         }
     }
 
+    /*
     private void build() {
         int head = 0;
         int tail = 0;
@@ -64,7 +65,7 @@ public class SuffixTree {
         
         
         }
-    }
+    }*/
 
 
     // Build the suffix tree using Ukkonen's algorithm. This function is

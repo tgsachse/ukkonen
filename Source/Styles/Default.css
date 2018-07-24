@@ -1,9 +1,13 @@
+/* Part of Willow by Tiger Sachse. */
+
+/* Formatting for the top portion of the main window. */
 .topHBox {
     -fx-spacing: 12;
     -fx-padding: 30;
     -fx-alignment: center;
 }
 
+/* Formatting for the bottom portion of the main window. */
 .botHBox {
     -fx-spacing: 20;
     -fx-padding: 40;
