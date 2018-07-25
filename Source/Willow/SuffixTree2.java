@@ -9,11 +9,35 @@ public class SuffixTree2 {
     private String string;
 
     public static void main(String[] args) {
-        SuffixTree2 tree = new SuffixTree2("abc");
+        SuffixTree2 tree = new SuffixTree2("abcab$");
+        tree.print();
+    }
 
-        for (Node node : tree.root.children.values()) {
-            System.out.printf("%d %d\n", node.indices.begin, node.indices.end);
-            System.out.println(tree.string.substring(node.indices.begin, node.indices.end + 1)); 
+    public void print() {
+        System.out.println("Start, Begin, End, String");
+        print(root);
+    }
+
+    private void print(Node current) {
+        if (current == null) {
+            return;
+        }
+
+        System.out.println("Node:");
+        System.out.printf("%d, %d, %d, ",
+                          current.start,
+                          current.indices.begin,
+                          current.indices.end);
+        if (current.indices.end > current.indices.begin) {
+            System.out.printf("%s\n",
+                              string.substring(current.indices.begin, current.indices.end + 1));
+        }
+        else {
+            System.out.println("(no string)");
+        }
+
+        for (Node child : current.children.values()) {
+            print(child);
         }
     }
 
@@ -32,36 +56,43 @@ public class SuffixTree2 {
     }
 
     private void insertSuffix(int index) {
-        Node child = root.getChild(string.charAt(index));
-        
-        if (child == null) {
-            root.addChild(string.charAt(index), index, index, string.length() - 1); 
-        }
-        else {
+        Node parent = root;
+        Node child = root;
 
-            // know that the first char matches
-            int suffixPosition = index + 1;
-            int edgePosition = child.indices.begin + 1;
+        int suffixPosition = index;
+        int edgePosition = 0;
+
+        while (suffixPosition < string.length()) {
+            if (edgePosition > child.indices.end) {
+                parent = child;
+                child = child.getChild(string.charAt(suffixPosition));
+
+                if (child == null) {
+                    parent.addChild(string.charAt(suffixPosition),
+                                    index,
+                                    suffixPosition,
+                                    string.length() - 1);
+                    break;
+                }
+            }
             
-            while (suffixPosition < string.length()) {
-                if (edgePosition > child.indices.end) {
-                    // reset child
-                }
+            if (string.charAt(suffixPosition) != string.charAt(edgePosition)) {
+                // not set up right.
+                Node split = new Node(null, child.indices.begin, edgePosition - 1);
+                parent.addChild(string.charAt(child.indices.begin), split);
 
-                if (string.charAt(suffixPosition) != string.charAt(edgePosition)) {
-                    Node breakNode = new
-                    child.addChild(string.charAt(edgePosition,
-                                   child.start,
-                                   edgePosition,
-                                   child.indicies.end));
-                    child.addChild(string.charAt(suffixPosition))
-                }
-                else {
-                    suffixPosition++;
-                    edgePosition++;
-                }
-            } 
-        
+                child.indices.begin = edgePosition;
+                split.addChild(string.charAt(edgePosition), child);
+                split.addChild(string.charAt(suffixPosition),
+                               index,
+                               suffixPosition,
+                               string.length() - 1);
+                break;
+            }
+            else {
+                suffixPosition++;
+                edgePosition++;
+            }
         }
     }
 }
@@ -73,7 +104,7 @@ class Node {
     
     public Node() {
         start = null;
-        indices = null;
+        indices = new Indices(-1, -1);
         children = new HashMap<>();
     }
 
@@ -88,8 +119,12 @@ class Node {
         return children.get(child);
     }
 
-    public void addChild(Character child, Integer childStart, int childBegin, int childEnd) {
-        children.put(child, new Node(childStart, childBegin, childEnd));
+    public void addChild(Character key, Integer childStart, int childBegin, int childEnd) {
+        children.put(key, new Node(childStart, childBegin, childEnd));
+    }
+
+    public void addChild(Character key, Node child) {
+        children.put(key, child);
     }
 }
 

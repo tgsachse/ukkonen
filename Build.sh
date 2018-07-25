@@ -12,12 +12,12 @@ fi
 2> /dev/null 1>&2 rm -r Build/
 mkdir Build/
 cp -r Source/* Build/
-cp -r Docs/ Build/Documentation/
+cp -r Documentation/ Build/Documentation/
 
 # Compile the source code and supporting material into a jar in the distribution folder.
 cd Build/
 javac Willow/*.java &&
-jar cvfm ../Dist/$NAME.jar Willow/Manifest.txt Willow/* Styles/* Documentation/*
+jar cvfm ../Distribution/$NAME.jar Willow/Manifest.txt Willow/* Styles/* Documentation/*
 cd ..
 
 # Clean up after yourself.
@@ -25,4 +25,4 @@ rm -r Build/
 
 # All done!
 echo ""
-echo "Willow packaged into jar located at Dist/$NAME.jar"
+echo "Willow packaged into jar located at Distribution/$NAME.jar"
