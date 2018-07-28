@@ -9,20 +9,20 @@ else
 fi
 
 # Make the Build directory and copy everything we need.
-2> /dev/null 1>&2 rm -r Build/
-mkdir Build/
-cp -r Source/* Build/
-cp -r Documentation/ Build/Documentation/
+2> /dev/null 1>&2 rm -r build/
+mkdir build/
+cp -r source/* build/
+cp -r docs/ build/Documentation/
 
 # Compile the source code and supporting material into a jar in the distribution folder.
-cd Build/
+cd build/
 javac Willow/*.java &&
-jar cvfm ../Distribution/$NAME.jar Willow/Manifest.txt Willow/* Styles/* Documentation/*
+jar cvfm ../dist/$NAME.jar Willow/Manifest.txt Willow/* Styles/* Documentation/*
 cd ..
 
 # Clean up after yourself.
-rm -r Build/
+rm -r build/
 
 # All done!
 echo ""
-echo "Willow packaged into jar located at Distribution/$NAME.jar"
+echo "Willow packaged into jar located at dist/$NAME.jar"
