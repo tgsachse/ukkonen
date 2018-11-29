@@ -1,15 +1,15 @@
 // Part of Willow by Tiger Sachse.
 
-//package Willow;
+package Willow;
 
 import java.util.*;
 
-public class SuffixTree2 {
+public class SuffixTree {
     private Node root;
     private String string;
 
     public static void main(String[] args) {
-        SuffixTree2 tree = new SuffixTree2("abcab$");
+        SuffixTree tree = new SuffixTree("abcab$");
         tree.print();
     }
 
@@ -41,7 +41,7 @@ public class SuffixTree2 {
         }
     }
 
-    public SuffixTree2(String string) {
+    public SuffixTree(String string) {
         this.string = string;
 
         build();

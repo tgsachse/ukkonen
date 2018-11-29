@@ -204,7 +204,7 @@ public class GraphicalInterface extends Application {
         // If the treeString exists, create the tree and draw it.
         if (treeString != null) {
             SuffixTree tree = new SuffixTree(treeString);
-            tree.draw(pane, MIN_WIDTH);
+            //tree.draw(pane, MIN_WIDTH);
         }
     }
 
@@ -328,6 +328,7 @@ class NodePane extends Pane {
         
         getChildren().addAll(outer, inner);
 
+        /*
         // If this node is a leaf, print the suffix terminus inside the circle.
         if (node != null && node.getTerminus() >= 0) {
             Text text = new Text(Integer.toString(node.getTerminus()));
@@ -339,7 +340,7 @@ class NodePane extends Pane {
             text.relocate(textX, textY);
             
             getChildren().add(text);
-        }
+        }*/
     }
 
     // Draw an edge with appropriate suffix to the pane. This function was *very*
