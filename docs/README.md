@@ -1,5 +1,5 @@
 # willow
-Create explicit suffix trees for papers or for fun using this program. Still pre-alpha and a work in progress.
+Create explicit suffix trees for papers or for fun using this program. **This project is indefinitely on ice**.
 
 Below are some examples of the program in action.
 ![image cannot be displayed](../images/EXAMPLE_1.png "Example 1")
